@@ -8,6 +8,7 @@ namespace sf {
 class RaycasterInterface
 {
 public:
+    virtual ~RaycasterInterface() = default;
     virtual const char * getRaycasterTechName() const = 0;
     virtual void rasterize() = 0;
     virtual void setScreenSize(unsigned width, unsigned height) = 0;

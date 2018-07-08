@@ -7,7 +7,7 @@ namespace fox {
 class FoxRaycaster : public RaycasterInterface
 {
 public:
-    FoxRaycaster(const std::string& name);
+    FoxRaycaster();
     virtual const char * getRaycasterTechName() const override;
     virtual void rasterize() override;
     virtual void handleKeys() override;
@@ -16,7 +16,7 @@ public:
     virtual void downloadImage(sf::Texture& texture) override;
     virtual void downloadDepthImage(sf::Texture& texture) override;
     virtual void loadMap(const sf::Image& img) override;
-
+    void setName(const std::string& name);
 
 private:
     void setMapSize(unsigned width, unsigned height);

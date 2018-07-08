@@ -2,6 +2,8 @@
 #include <SFML/Graphics.hpp>
 #include <sstream>
 #include <algorithm>
+#include "BackendManager.hpp"
+#include "FpsCounter.hpp"
 
 const unsigned kResolutionsCount = 5u;
 
@@ -20,12 +22,12 @@ public:
     {
         std::ostringstream ss;
         ss << std::boolalpha;
-        ss << "Type: " << rendertype << std::endl;
         ss << "FPS:  " << fps << std::endl;
         ss << "(R) Stretch:    " << stretch << std::endl;
         ss << "(T) Smooth:     " << smooth << std::endl;
         ss << "(Y) Resolution: " << kResolutions[resolution].x << 'x' << kResolutions[resolution].y << std::endl;
         ss << "(U) Depthdraw:  " << depthdraw << std::endl;
+        ss << "(I) Type:       " << rendertype << std::endl;
         return ss.str();
     }
 
@@ -40,12 +42,18 @@ public:
 
 int main(int argc, char ** argv)
 {
+    FpsCounter fps;
     RunInfo runinfo;
 
     sf::RenderWindow app(sf::VideoMode(800u, 600u), "FoxRaycaster");
     app.setFramerateLimit(60u);
 
-    fox::FoxRaycaster software("Software1");
+    //BackendManager manager;
+    //manager.addBackend<fox::FoxRaycaster>()->setName("software1");
+    //manager.addBackend<fox::FoxRaycaster>()->setName("software2");
+
+    fox::FoxRaycaster software;
+    software.setName("software1");
     RaycasterInterface * currentraycaster = &software;
 
     currentraycaster->setScreenSize(kResolutions[runinfo.resolution].x, kResolutions[runinfo.resolution].y);
@@ -63,8 +71,6 @@ int main(int argc, char ** argv)
     sf::Texture tex;
     sf::Font font;
     font.loadFromFile("DejaVuSansMono.ttf");
-    sf::Clock fpsclock;
-    unsigned frames = 0u;
     while(app.isOpen())
     {
         sf::Event eve;
@@ -76,7 +82,6 @@ int main(int argc, char ** argv)
                 app.close();
                 break;
             case sf::Event::Resized:
-                //raycaster.setScreenSize(eve.size.width, eve.size.height);
                 app.setView(sf::View(sf::FloatRect(0.f, 0.f, eve.size.width, eve.size.height)));
                 break;
             case sf::Event::KeyPressed:
@@ -94,6 +99,9 @@ int main(int argc, char ** argv)
                     break;
                 case sf::Keyboard::U:
                     runinfo.depthdraw = !runinfo.depthdraw;
+                    break;
+                case sf::Keyboard::I:
+                    //switch interface here
                     break;
                 }//switch eve key code
                 break;
@@ -133,14 +141,7 @@ int main(int argc, char ** argv)
         txt.setOutlineColor(sf::Color::Black);
         app.draw(txt);
         app.display();
-
-        ++frames;
-        if(frames > 60u || fpsclock.getElapsedTime().asSeconds() > 1.5f)
-        {
-            runinfo.fps = frames / fpsclock.getElapsedTime().asSeconds();
-            frames = 0u;
-            fpsclock.restart();
-        }//if need to poll and reset fps counter
+        runinfo.fps = fps.frame();
     }
     return 0;
 }
