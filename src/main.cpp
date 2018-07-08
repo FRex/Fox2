@@ -4,41 +4,8 @@
 #include <algorithm>
 #include "BackendManager.hpp"
 #include "FpsCounter.hpp"
+#include "RunInfo.hpp"
 
-const unsigned kResolutionsCount = 5u;
-
-const sf::Vector2u kResolutions[kResolutionsCount] = {
-    {320u, 240u},
-    {640u, 480u},
-    {800u, 600u},
-    {1024u, 768u},
-    {1280u, 1024u},
-};
-
-class RunInfo
-{
-public:
-    std::string toString() const
-    {
-        std::ostringstream ss;
-        ss << std::boolalpha;
-        ss << "FPS:  " << fps << std::endl;
-        ss << "(R) Stretch:    " << stretch << std::endl;
-        ss << "(T) Smooth:     " << smooth << std::endl;
-        ss << "(Y) Resolution: " << kResolutions[resolution].x << 'x' << kResolutions[resolution].y << std::endl;
-        ss << "(U) Depthdraw:  " << depthdraw << std::endl;
-        ss << "(I) Type:       " << rendertype << std::endl;
-        return ss.str();
-    }
-
-    float fps = 0.f;
-    bool stretch = false;
-    bool smooth = false;
-    unsigned resolution = 0u;
-    bool depthdraw = false;
-    const char * rendertype = "";
-
-};
 
 int main(int argc, char ** argv)
 {
@@ -48,25 +15,13 @@ int main(int argc, char ** argv)
     sf::RenderWindow app(sf::VideoMode(800u, 600u), "FoxRaycaster");
     app.setFramerateLimit(60u);
 
-    //BackendManager manager;
-    //manager.addBackend<fox::FoxRaycaster>()->setName("software1");
-    //manager.addBackend<fox::FoxRaycaster>()->setName("software2");
+    BackendManager manager;
+    manager.addBackend<fox::FoxRaycaster>()->setName("software1");
+    manager.addBackend<fox::FoxRaycaster>()->setName("software2");
+    manager.loadResources();
 
-    fox::FoxRaycaster software;
-    software.setName("software1");
-    RaycasterInterface * currentraycaster = &software;
-
-    currentraycaster->setScreenSize(kResolutions[runinfo.resolution].x, kResolutions[runinfo.resolution].y);
-
-    sf::Image img;
-    if(img.loadFromFile("tex1.png"))
-        currentraycaster->setTexture(1u, img);
-
-    if(img.loadFromFile("tex2.png"))
-        currentraycaster->setTexture(2u, img);
-
-    if(img.loadFromFile("map.png"))
-        currentraycaster->loadMap(img);
+    RaycasterInterface * currentraycaster = manager.getCurrentInterface();
+    currentraycaster->setScreenSize(runinfo.getResolution().x, runinfo.getResolution().y);
 
     sf::Texture tex;
     sf::Font font;
@@ -95,13 +50,15 @@ int main(int argc, char ** argv)
                     break;
                 case sf::Keyboard::Y:
                     runinfo.resolution = (runinfo.resolution + 1) % kResolutionsCount;
-                    currentraycaster->setScreenSize(kResolutions[runinfo.resolution].x, kResolutions[runinfo.resolution].y);
+                    currentraycaster->setScreenSize(runinfo.getResolution().x, runinfo.getResolution().y);
                     break;
                 case sf::Keyboard::U:
                     runinfo.depthdraw = !runinfo.depthdraw;
                     break;
                 case sf::Keyboard::I:
-                    //switch interface here
+                    manager.switchInterface();
+                    currentraycaster = manager.getCurrentInterface();
+                    currentraycaster->setScreenSize(runinfo.getResolution().x, runinfo.getResolution().y);
                     break;
                 }//switch eve key code
                 break;

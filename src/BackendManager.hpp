@@ -3,6 +3,7 @@
 #include <SFML/System/NonCopyable.hpp>
 
 class RaycasterInterface;
+class RunInfo;
 
 class BackendManager : sf::NonCopyable
 {
@@ -12,6 +13,7 @@ public:
 
     void loadResources();
     RaycasterInterface * getCurrentInterface() const;
+    void switchInterface();
 
 private:
     std::vector<RaycasterInterface*> m_backends;
