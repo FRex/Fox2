@@ -7,18 +7,20 @@ namespace fox {
 class FoxRaycaster : public RaycasterInterface
 {
 public:
-    FoxRaycaster();
+    FoxRaycaster(const std::string& name);
     virtual const char * getRaycasterTechName() const override;
     virtual void rasterize() override;
-    void handleKeys();
+    virtual void handleKeys() override;
     virtual void setTexture(unsigned texnum, const sf::Image& img) override;
     virtual void setScreenSize(unsigned width, unsigned height) override;
-    void setMapSize(unsigned width, unsigned height);
-    void setMapTile(unsigned x, unsigned y, unsigned tile);
     virtual void downloadImage(sf::Texture& texture) override;
     virtual void downloadDepthImage(sf::Texture& texture) override;
+    virtual void loadMap(const sf::Image& img) override;
+
 
 private:
+    void setMapSize(unsigned width, unsigned height);
+    void setMapTile(unsigned x, unsigned y, unsigned tile);
     unsigned * getTexture(unsigned num);
     const unsigned * getTexture(unsigned num) const;
     unsigned screenPixelIndex(unsigned x, unsigned y);
@@ -46,6 +48,7 @@ private:
     std::vector<float> m_depthbuffer;
     sf::Image m_depthimage;
     std::vector<sf::Uint8> m_greydepthpixels;
+    std::string m_name;
 
 };
 

@@ -60,7 +60,7 @@ inline unsigned complementRGB(unsigned color)
     return (r << 24) + (g << 16) + (b << 8) + a;
 }
 
-FoxRaycaster::FoxRaycaster()
+FoxRaycaster::FoxRaycaster(const std::string& name) : m_name(name)
 {
     setScreenSize(800u, 600u);
     setMapSize(10u, 10u);
@@ -91,7 +91,7 @@ FoxRaycaster::FoxRaycaster()
 
 const char * FoxRaycaster::getRaycasterTechName() const
 {
-    return "Software";
+    return m_name.c_str();
 }
 
 void FoxRaycaster::rasterize()
@@ -415,6 +415,14 @@ void FoxRaycaster::downloadImage(sf::Texture& texture)
 void FoxRaycaster::downloadDepthImage(sf::Texture& texture)
 {
     texture.loadFromImage(m_depthimage);
+}
+
+void FoxRaycaster::loadMap(const sf::Image& img)
+{
+    setMapSize(img.getSize().x, img.getSize().y);
+    for(unsigned x = 0u; x < img.getSize().x; ++x)
+        for(unsigned y = 0u; y < img.getSize().y; ++y)
+            setMapTile(x, y, img.getPixel(x, y) != sf::Color::Black);
 }
 
 unsigned * FoxRaycaster::getTexture(unsigned texnum)

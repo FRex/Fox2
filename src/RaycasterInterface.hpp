@@ -2,6 +2,7 @@
 
 namespace sf {
     class Texture;
+    class Image;
 }
 
 class RaycasterInterface
@@ -13,6 +14,8 @@ public:
     virtual void setTexture(unsigned texnum, const sf::Image& img) = 0;
     virtual void downloadImage(sf::Texture& texture) = 0;
     virtual void downloadDepthImage(sf::Texture& texture) = 0;
+    virtual void loadMap(const sf::Image& img) = 0;
+    virtual void handleKeys() = 0;
 
 private:
 

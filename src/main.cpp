@@ -45,25 +45,20 @@ int main(int argc, char ** argv)
     sf::RenderWindow app(sf::VideoMode(800u, 600u), "FoxRaycaster");
     app.setFramerateLimit(60u);
 
-    fox::FoxRaycaster WAAAAAAAAAAAAAAAAAAAAAAAAAT;
-    RaycasterInterface& inter = WAAAAAAAAAAAAAAAAAAAAAAAAAT;
+    fox::FoxRaycaster software("Software1");
+    RaycasterInterface * currentraycaster = &software;
 
-    inter.setScreenSize(kResolutions[runinfo.resolution].x, kResolutions[runinfo.resolution].y);
+    currentraycaster->setScreenSize(kResolutions[runinfo.resolution].x, kResolutions[runinfo.resolution].y);
 
     sf::Image img;
     if(img.loadFromFile("tex1.png"))
-        inter.setTexture(1u, img);
+        currentraycaster->setTexture(1u, img);
 
     if(img.loadFromFile("tex2.png"))
-        inter.setTexture(2u, img);
+        currentraycaster->setTexture(2u, img);
 
     if(img.loadFromFile("map.png"))
-    {
-        WAAAAAAAAAAAAAAAAAAAAAAAAAT.setMapSize(img.getSize().x, img.getSize().y);
-        for(unsigned x = 0u; x < img.getSize().x; ++x)
-            for(unsigned y = 0u; y < img.getSize().y; ++y)
-                WAAAAAAAAAAAAAAAAAAAAAAAAAT.setMapTile(x, y, img.getPixel(x, y) != sf::Color::Black);
-    }
+        currentraycaster->loadMap(img);
 
     sf::Texture tex;
     sf::Font font;
@@ -95,7 +90,7 @@ int main(int argc, char ** argv)
                     break;
                 case sf::Keyboard::Y:
                     runinfo.resolution = (runinfo.resolution + 1) % kResolutionsCount;
-                    inter.setScreenSize(kResolutions[runinfo.resolution].x, kResolutions[runinfo.resolution].y);
+                    currentraycaster->setScreenSize(kResolutions[runinfo.resolution].x, kResolutions[runinfo.resolution].y);
                     break;
                 case sf::Keyboard::U:
                     runinfo.depthdraw = !runinfo.depthdraw;
@@ -106,15 +101,15 @@ int main(int argc, char ** argv)
         }//while app poll event eve
 
         app.clear(sf::Color(0x2d0022ff));
-        WAAAAAAAAAAAAAAAAAAAAAAAAAT.handleKeys();
-        inter.rasterize();
+        currentraycaster->handleKeys();
+        currentraycaster->rasterize();
         if(runinfo.depthdraw)
         {
-            inter.downloadDepthImage(tex);
+            currentraycaster->downloadDepthImage(tex);
         }
         else
         {
-            inter.downloadImage(tex);
+            currentraycaster->downloadImage(tex);
         }
 
         sf::Sprite spr(tex);
@@ -131,7 +126,7 @@ int main(int argc, char ** argv)
         spr.setPosition(sf::Vector2f(app.getSize()) / 2.f);
         app.draw(spr);
 
-        runinfo.rendertype = inter.getRaycasterTechName();
+        runinfo.rendertype = currentraycaster->getRaycasterTechName();
         sf::Text txt(runinfo.toString(), font);
         txt.setOutlineThickness(1.f);
         txt.setFillColor(sf::Color::White);
