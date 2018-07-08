@@ -2,6 +2,7 @@
 #include <cmath>
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/System/Clock.hpp>
+#include <SFML/Graphics/Texture.hpp>
 
 /*
 Original raycasting code from tutorials at: http://lodev.org/cgtutor/index.html
@@ -86,6 +87,11 @@ FoxRaycaster::FoxRaycaster()
                 tex0[texturePixelIndex(x, y)] = complementRGB(tex0[texturePixelIndex(x, y)]);
         }//for y
     }//for x
+}
+
+const char * FoxRaycaster::getRaycasterTechName() const
+{
+    return "Software";
 }
 
 void FoxRaycaster::rasterize()
@@ -292,11 +298,6 @@ void FoxRaycaster::rasterizeDiffuse()
     m_sfimage.create(m_screenwidth, m_screenheight, m_sfbuffer.data());
 }
 
-const sf::Image& FoxRaycaster::getImage() const
-{
-    return m_sfimage;
-}
-
 void FoxRaycaster::handleKeys()
 {
     //speed modifiers
@@ -406,9 +407,14 @@ void FoxRaycaster::setMapTile(unsigned x, unsigned y, unsigned tile)
         m_map[x + y * m_mapwidth] = tile;
 }
 
-const sf::Image& FoxRaycaster::getDepthImage() const
+void FoxRaycaster::downloadImage(sf::Texture& texture)
 {
-    return m_depthimage;
+    texture.loadFromImage(m_sfimage);
+}
+
+void FoxRaycaster::downloadDepthImage(sf::Texture& texture)
+{
+    texture.loadFromImage(m_depthimage);
 }
 
 unsigned * FoxRaycaster::getTexture(unsigned texnum)

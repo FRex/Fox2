@@ -20,7 +20,8 @@ public:
     {
         std::ostringstream ss;
         ss << std::boolalpha;
-        ss << "FPS: " << fps << std::endl;
+        ss << "Type: " << rendertype << std::endl;
+        ss << "FPS:  " << fps << std::endl;
         ss << "(R) Stretch:    " << stretch << std::endl;
         ss << "(T) Smooth:     " << smooth << std::endl;
         ss << "(Y) Resolution: " << kResolutions[resolution].x << 'x' << kResolutions[resolution].y << std::endl;
@@ -33,6 +34,7 @@ public:
     bool smooth = false;
     unsigned resolution = 0u;
     bool depthdraw = false;
+    const char * rendertype = "";
 
 };
 
@@ -43,22 +45,24 @@ int main(int argc, char ** argv)
     sf::RenderWindow app(sf::VideoMode(800u, 600u), "FoxRaycaster");
     app.setFramerateLimit(60u);
 
-    fox::FoxRaycaster raycaster;
-    raycaster.setScreenSize(kResolutions[runinfo.resolution].x, kResolutions[runinfo.resolution].y);
+    fox::FoxRaycaster WAAAAAAAAAAAAAAAAAAAAAAAAAT;
+    RaycasterInterface& inter = WAAAAAAAAAAAAAAAAAAAAAAAAAT;
+
+    inter.setScreenSize(kResolutions[runinfo.resolution].x, kResolutions[runinfo.resolution].y);
 
     sf::Image img;
     if(img.loadFromFile("tex1.png"))
-        raycaster.setTexture(1u, img);
+        inter.setTexture(1u, img);
 
     if(img.loadFromFile("tex2.png"))
-        raycaster.setTexture(2u, img);
+        inter.setTexture(2u, img);
 
     if(img.loadFromFile("map.png"))
     {
-        raycaster.setMapSize(img.getSize().x, img.getSize().y);
+        WAAAAAAAAAAAAAAAAAAAAAAAAAT.setMapSize(img.getSize().x, img.getSize().y);
         for(unsigned x = 0u; x < img.getSize().x; ++x)
             for(unsigned y = 0u; y < img.getSize().y; ++y)
-                raycaster.setMapTile(x, y, img.getPixel(x, y) != sf::Color::Black);
+                WAAAAAAAAAAAAAAAAAAAAAAAAAT.setMapTile(x, y, img.getPixel(x, y) != sf::Color::Black);
     }
 
     sf::Texture tex;
@@ -91,7 +95,7 @@ int main(int argc, char ** argv)
                     break;
                 case sf::Keyboard::Y:
                     runinfo.resolution = (runinfo.resolution + 1) % kResolutionsCount;
-                    raycaster.setScreenSize(kResolutions[runinfo.resolution].x, kResolutions[runinfo.resolution].y);
+                    inter.setScreenSize(kResolutions[runinfo.resolution].x, kResolutions[runinfo.resolution].y);
                     break;
                 case sf::Keyboard::U:
                     runinfo.depthdraw = !runinfo.depthdraw;
@@ -102,15 +106,15 @@ int main(int argc, char ** argv)
         }//while app poll event eve
 
         app.clear(sf::Color(0x2d0022ff));
-        raycaster.handleKeys();
-        raycaster.rasterize();
+        WAAAAAAAAAAAAAAAAAAAAAAAAAT.handleKeys();
+        inter.rasterize();
         if(runinfo.depthdraw)
         {
-            tex.loadFromImage(raycaster.getDepthImage());
+            inter.downloadDepthImage(tex);
         }
         else
         {
-            tex.loadFromImage(raycaster.getImage());
+            inter.downloadImage(tex);
         }
 
         sf::Sprite spr(tex);
@@ -127,6 +131,7 @@ int main(int argc, char ** argv)
         spr.setPosition(sf::Vector2f(app.getSize()) / 2.f);
         app.draw(spr);
 
+        runinfo.rendertype = inter.getRaycasterTechName();
         sf::Text txt(runinfo.toString(), font);
         txt.setOutlineThickness(1.f);
         txt.setFillColor(sf::Color::White);

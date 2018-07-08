@@ -1,20 +1,22 @@
 #pragma once
 #include <SFML/Graphics/Image.hpp>
+#include "RaycasterInterface.hpp"
 
 namespace fox {
 
-class FoxRaycaster
+class FoxRaycaster : public RaycasterInterface
 {
 public:
     FoxRaycaster();
-    void rasterize();
-    const sf::Image& getImage() const;
+    virtual const char * getRaycasterTechName() const override;
+    virtual void rasterize() override;
     void handleKeys();
-    void setTexture(unsigned texnum, const sf::Image& img);
-    void setScreenSize(unsigned width, unsigned height);
+    virtual void setTexture(unsigned texnum, const sf::Image& img) override;
+    virtual void setScreenSize(unsigned width, unsigned height) override;
     void setMapSize(unsigned width, unsigned height);
     void setMapTile(unsigned x, unsigned y, unsigned tile);
-    const sf::Image& getDepthImage() const;
+    virtual void downloadImage(sf::Texture& texture) override;
+    virtual void downloadDepthImage(sf::Texture& texture) override;
 
 private:
     unsigned * getTexture(unsigned num);
