@@ -5,6 +5,18 @@ namespace sf {
     class Image;
 }
 
+class CameraExchangeInfo
+{
+public:
+    float camposx = 4.5f;
+    float camposy = 4.5f;
+    float dirx = -1.f;
+    float diry = 0.f;
+    float planex = 0.f;
+    float planey = 0.66f;
+
+};
+
 class RaycasterInterface
 {
 public:
@@ -17,6 +29,8 @@ public:
     virtual void downloadDepthImage(sf::Texture& texture) = 0;
     virtual void loadMap(const sf::Image& img) = 0;
     virtual void handleKeys() = 0;
+    virtual CameraExchangeInfo getCameraInfo() const = 0;
+    virtual void setCameraInfo(const CameraExchangeInfo& info) = 0;
 
 private:
 

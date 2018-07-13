@@ -16,6 +16,8 @@ public:
     virtual void downloadImage(sf::Texture& texture) override;
     virtual void downloadDepthImage(sf::Texture& texture) override;
     virtual void loadMap(const sf::Image& img) override;
+    virtual CameraExchangeInfo getCameraInfo() const;
+    virtual void setCameraInfo(const CameraExchangeInfo& info);
     void setName(const std::string& name);
 
 private:

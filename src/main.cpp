@@ -5,6 +5,7 @@
 #include "BackendManager.hpp"
 #include "FpsCounter.hpp"
 #include "RunInfo.hpp"
+#include "CudaRaycaster.hpp"
 
 
 int main(int argc, char ** argv)
@@ -16,8 +17,8 @@ int main(int argc, char ** argv)
     app.setFramerateLimit(60u);
 
     BackendManager manager;
-    manager.addBackend<fox::FoxRaycaster>()->setName("software1");
-    manager.addBackend<fox::FoxRaycaster>()->setName("software2");
+    manager.addBackend<fox::FoxRaycaster>();
+    manager.addBackend<fox::CudaRaycaster>();
     manager.loadResources();
 
     RaycasterInterface * currentraycaster = manager.getCurrentInterface();

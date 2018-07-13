@@ -425,6 +425,28 @@ void FoxRaycaster::loadMap(const sf::Image& img)
             setMapTile(x, y, img.getPixel(x, y) != sf::Color::Black);
 }
 
+CameraExchangeInfo FoxRaycaster::getCameraInfo() const
+{
+    CameraExchangeInfo ret;
+    ret.camposx = m_camposx;
+    ret.camposy = m_camposy;
+    ret.dirx = m_dirx;
+    ret.diry = m_diry;
+    ret.planex = m_planex;
+    ret.planey = m_planey;
+    return ret;
+}
+
+void FoxRaycaster::setCameraInfo(const CameraExchangeInfo& info)
+{
+    m_camposx = info.camposx;
+    m_camposy = info.camposy;
+    m_dirx = info.dirx;
+    m_diry = info.diry;
+    m_planex = info.planex;
+    m_planey = info.planey;
+}
+
 void FoxRaycaster::setName(const std::string& name)
 {
     m_name = name;

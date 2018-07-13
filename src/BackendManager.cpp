@@ -37,5 +37,7 @@ void BackendManager::switchInterface()
     if(m_backends.size() < 2u)
         return;
 
+    const CameraExchangeInfo info = getCurrentInterface()->getCameraInfo();
     m_curbackendindex = (m_curbackendindex + 1u) % m_backends.size();
+    getCurrentInterface()->setCameraInfo(info);
 }
