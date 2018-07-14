@@ -3,6 +3,7 @@
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/Graphics/Texture.hpp>
+#include "cuda_runtime_api.h"
 
 /*
 Original raycasting code from tutorials at: http://lodev.org/cgtutor/index.html
@@ -415,12 +416,34 @@ void CudaRaycaster::downloadDepthImage(sf::Texture& texture)
     texture.loadFromImage(m_depthimage);
 }
 
+inline void impl_checkCudaCall(cudaError_t ret, const char * file, int line)
+{
+    if(ret != cudaSuccess)
+        fprintf(stderr, "%s:%d: cuda error %d\n", file, line, static_cast<int>(ret));
+}
+
+#define checkCudaCall(r) impl_checkCudaCall(r, __FILE__, __LINE__)
+
+
 void CudaRaycaster::loadMap(const sf::Image& img)
 {
-    setMapSize(img.getSize().x, img.getSize().y);
-    for(unsigned x = 0u; x < img.getSize().x; ++x)
-        for(unsigned y = 0u; y < img.getSize().y; ++y)
-            setMapTile(x, y, img.getPixel(x, y) != sf::Color::Black);
+    if(m_cuda_map)
+        checkCudaCall(cudaFree(static_cast<void*>(m_cuda_map)));
+
+    std::vector<unsigned> tiles;
+    const auto ims = img.getSize();
+    m_mapwidth = ims.x;
+    m_mapheight = ims.y;
+    for(unsigned y = 0u; y < ims.y; ++y)
+        for(unsigned x = 0u; x < ims.x; ++x)
+            tiles.push_back(img.getPixel(x, y) != sf::Color::Black);
+
+    m_map = tiles;
+
+    void * ptr;
+    checkCudaCall(cudaMalloc(&ptr, tiles.size() * sizeof(tiles[0])));
+    m_cuda_map = static_cast<unsigned*>(ptr);
+    checkCudaCall(cudaMemcpy(m_cuda_map, tiles.data(), sizeof(tiles[0]) * tiles.size(), cudaMemcpyHostToDevice));
 }
 
 CameraExchangeInfo CudaRaycaster::getCameraInfo() const
