@@ -18,7 +18,7 @@ int main(int argc, char ** argv)
 
     BackendManager manager;
     manager.addBackend<fox::FoxRaycaster>();
-    manager.addBackend<fox::CudaRaycaster>();
+    manager.addBackend<CudaRaycaster>();
     manager.loadResources();
 
     RaycasterInterface * currentraycaster = manager.getCurrentInterface();
