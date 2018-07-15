@@ -14,7 +14,6 @@ int main(int argc, char ** argv)
     RunInfo runinfo;
 
     sf::RenderWindow app(sf::VideoMode(800u, 600u), "FoxRaycaster");
-    app.setFramerateLimit(60u);
 
     BackendManager manager;
     manager.addBackend<fox::FoxRaycaster>();
