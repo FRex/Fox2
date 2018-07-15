@@ -134,7 +134,7 @@ inline unsigned screenPixelIndex(const CudaRasterizationParams * params, unsigne
 inline const unsigned * getTexture(const CudaRasterizationParams * params, unsigned num)
 {
     if(num < params->texturecount)
-        return params->textures + num * kTextureSize;
+        return params->textures + num * kTexturePixels;
 
     return params->textures; //jorge
 }
