@@ -4,6 +4,7 @@
 #include <SFML/System/Clock.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #include "cuda_runtime_api.h"
+#include "device_launch_parameters.h"
 
 /*
 Original raycasting code from tutorials at: http://lodev.org/cgtutor/index.html
@@ -65,6 +66,25 @@ inline unsigned complementRGB(unsigned color)
     return (r << 24) + (g << 16) + (b << 8) + a;
 }
 
+class CudaRasterizationParams
+{
+public:
+    float camposx;
+    float camposy;
+    float dirx;
+    float diry;
+    float planex;
+    float planey;
+    int screenwidth;
+    int screenheight;
+    unsigned * screen;
+    unsigned mapwidth;
+    unsigned mapheight;
+    unsigned * map;
+    unsigned * textures;
+    unsigned texturecount;
+};
+
 CudaRaycaster::CudaRaycaster()
 {
     setScreenSize(800u, 600u);
@@ -92,31 +112,21 @@ CudaRaycaster::CudaRaycaster()
                 tex0[texturePixelIndex(x, y)] = complementRGB(tex0[texturePixelIndex(x, y)]);
         }//for y
     }//for x
+
+    void * ptr = 0x0;
+    checkCudaCall(cudaMalloc(&ptr, sizeof(m_textures[0]) * m_textures.size()));
+    m_cuda_texturecount = 1u;
+    m_cuda_textures = static_cast<unsigned*>(ptr);
+    checkCudaCall(cudaMemcpy(m_cuda_textures, m_textures.data(), 4u * kTexturePixels, cudaMemcpyHostToDevice));
+
+    checkCudaCall(cudaMalloc(&ptr, sizeof(CudaRasterizationParams)));
+    m_cuda_rast_params = static_cast<CudaRasterizationParams*>(ptr);
 }
 
 const char * CudaRaycaster::getRaycasterTechName() const
 {
     return "cuda";
 }
-
-class CudaRasterizationParams
-{
-public:
-    float camposx;
-    float camposy;
-    float dirx;
-    float diry;
-    float planex;
-    float planey;
-    int screenwidth;
-    int screenheight;
-    unsigned * screen;
-    unsigned mapwidth;
-    unsigned mapheight;
-    unsigned * map;
-    unsigned * textures;
-    unsigned texturecount;
-};
 
 inline unsigned getMapTile(const CudaRasterizationParams * params, unsigned x, unsigned y)
 {
@@ -318,9 +328,19 @@ static void rasterizeColumn(int x, const CudaRasterizationParams * params)
     }//if world map > 0
 }
 
+__global__ void clearScreen(unsigned * screen, unsigned width, unsigned height, unsigned color)
+{
+    unsigned * row = screen + blockIdx.x * width;
+    for(int i = 0; i < width; ++i)
+        row[i] = color;
+}
+
 void CudaRaycaster::rasterize()
 {
     m_screen.assign(m_screenpixels, 0x7f7f7fff);
+    clearScreen <<<m_screenheight, 1 >>> (m_cuda_screen, m_screenwidth, m_screenheight, 0x7f7f7fff);
+
+
 
     CudaRasterizationParams params;
     params.camposx = m_camposx;
@@ -351,6 +371,23 @@ void CudaRaycaster::rasterize()
     }//for i
 
     m_sfimage.create(m_screenwidth, m_screenheight, m_sfbuffer.data());
+
+
+
+
+
+    params.map = m_cuda_map;
+    params.textures = m_cuda_textures;
+    params.screen = m_cuda_screen;
+    params.texturecount = m_cuda_texturecount;
+    checkCudaCall(cudaMemcpy(m_cuda_rast_params, &params, sizeof(CudaRasterizationParams), cudaMemcpyHostToDevice));
+
+
+
+
+
+
+
 }
 
 void CudaRaycaster::handleKeys()
@@ -430,6 +467,13 @@ void CudaRaycaster::setScreenSize(unsigned width, unsigned height)
     m_screenpixels = width * height;
     m_screen.assign(m_screenpixels, 0x7f7f7fff);
     m_sfbuffer.resize(m_screenpixels * 4u);
+
+    if(m_cuda_screen)
+        checkCudaCall(cudaFree(m_cuda_screen));
+
+    void * ptr = 0x0;
+    checkCudaCall(cudaMalloc(&ptr, sizeof(unsigned) * m_screenpixels));
+    m_cuda_screen = static_cast<unsigned*>(ptr);
 }
 
 void CudaRaycaster::setMapSize(unsigned width, unsigned height)

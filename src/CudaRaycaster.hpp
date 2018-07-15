@@ -44,5 +44,9 @@ private:
     unsigned m_mapwidth;
     unsigned m_mapheight;
     unsigned * m_cuda_map = 0x0;
+    unsigned * m_cuda_textures = 0x0;
+    unsigned m_cuda_texturecount = 0u;
+    unsigned * m_cuda_screen = 0x0;
+    CudaRasterizationParams * m_cuda_rast_params = 0x0;
 
 };
