@@ -111,10 +111,35 @@ public:
     int screenwidth;
     int screenheight;
     unsigned * screen;
-
+    unsigned mapwidth;
+    unsigned mapheight;
+    unsigned * map;
+    unsigned * textures;
+    unsigned texturecount;
 };
 
-void CudaRaycaster::rasterizeColumn(int x, const CudaRasterizationParams * params)
+inline unsigned getMapTile(const CudaRasterizationParams * params, unsigned x, unsigned y)
+{
+    if(x < params->mapwidth && y < params->mapheight)
+        return params->map[x + params->mapwidth * y];
+
+    return 1u;
+}
+
+inline unsigned screenPixelIndex(const CudaRasterizationParams * params, unsigned x, unsigned y)
+{
+    return x + params->screenwidth * y;
+}
+
+inline const unsigned * getTexture(const CudaRasterizationParams * params, unsigned num)
+{
+    if(num < params->texturecount)
+        return params->textures + num * kTextureSize;
+
+    return params->textures; //jorge
+}
+
+static void rasterizeColumn(int x, const CudaRasterizationParams * params)
 {
     //calculate ray position and direction
     const float camerax = 2.f * x / static_cast<float>(params->screenwidth) - 1.f; //x-coordinate in camera space
@@ -181,7 +206,7 @@ void CudaRaycaster::rasterizeColumn(int x, const CudaRasterizationParams * param
             side = 1;
         }
         //Check if ray has hit a wall
-        hit = getMapTile(mapx, mapy) > 0u;
+        hit = getMapTile(params, mapx, mapy) > 0u;
     }
 
     //Calculate distance projected on camera direction (oblique distance will give fisheye effect!)
@@ -194,16 +219,16 @@ void CudaRaycaster::rasterizeColumn(int x, const CudaRasterizationParams * param
     const int lineheight = static_cast<int>(params->screenheight / perpwalldist);
 
     //calculate lowest and highest pixel to fill in current stripe
-    int drawstart = -lineheight / 2 + m_screenheight / 2;
+    int drawstart = -lineheight / 2 + params->screenheight / 2;
     if(drawstart < 0)
         drawstart = 0;
 
-    int drawend = lineheight / 2 + m_screenheight / 2;
-    if(drawend >= m_screenheight)
-        drawend = m_screenheight - 1;
+    int drawend = lineheight / 2 + params->screenheight / 2;
+    if(drawend >= params->screenheight)
+        drawend = params->screenheight - 1;
 
     //choose wall color
-    if(getMapTile(mapx, mapy) > 0)
+    if(getMapTile(params, mapx, mapy) > 0)
     {
         float wallx;
         if(side == 0)
@@ -222,15 +247,15 @@ void CudaRaycaster::rasterizeColumn(int x, const CudaRasterizationParams * param
 
         for(int y = drawstart; y < drawend; y++)
         {
-            const int d = y * 256 - m_screenheight * 128 + lineheight * 128;  //256 and 128 factors to avoid floats
+            const int d = y * 256 - params->screenheight * 128 + lineheight * 128;  //256 and 128 factors to avoid floats
             const int texy = ((d * kTextureSize) / lineheight) / 256;
-            const unsigned * tex0 = getTexture(getMapTile(mapx, mapy));
+            const unsigned * tex0 = getTexture(params, getMapTile(params, mapx, mapy));
 
             unsigned color = tex0[texturePixelIndex(texx, texy)];
             if(side == 1)
                 color = halveRGB(color);
 
-            params->screen[screenPixelIndex(x, y)] = color;
+            params->screen[screenPixelIndex(params, x, y)] = color;
         }//for y
 
          //FLOOR CASTING:
@@ -263,36 +288,33 @@ void CudaRaycaster::rasterizeColumn(int x, const CudaRasterizationParams * param
         distplayer = 0.f;
 
         if(drawend < 0)
-            drawend = m_screenheight; //becomes < 0 when the integer overflows
+            drawend = params->screenheight; //becomes < 0 when the integer overflows
 
-                                      //draw the floor from drawEnd to the bottom of the screen
-        for(int y = drawend; y < m_screenheight; ++y)
+        //draw the floor from drawEnd to the bottom of the screen
+        for(int y = drawend; y < params->screenheight; ++y)
         {
-            const float currentdist = m_screenheight / (2.f * y - m_screenheight); //you could make a small lookup table for this instead
+            const float currentdist = params->screenheight / (2.f * y - params->screenheight); //you could make a small lookup table for this instead
             const float weight = (currentdist - distplayer) / (distwall - distplayer);
             const float currentfloorx = weight * floorxwall + (1.f - weight) * params->camposx;
             const float currentfloory = weight * floorywall + (1.f - weight) * params->camposy;
             const int floortexx = static_cast<int>(currentfloorx * kTextureSize) % kTextureSize;
             const int floortexy = static_cast<int>(currentfloory * kTextureSize) % kTextureSize;
 
-
-            const unsigned * floortex = getTexture(2u);
-            const unsigned * ceiltex = getTexture(0u);
+            const unsigned * floortex = getTexture(params, 2u);
+            const unsigned * ceiltex = getTexture(params, 0u);
 
             if((static_cast<int>(currentfloorx) + static_cast<int>(currentfloory)) % 2)
                 std::swap(floortex, ceiltex);
 
             //floor
-            params->screen[screenPixelIndex(x, y)] = floortex[texturePixelIndex(floortexx, floortexy)];
+            params->screen[screenPixelIndex(params, x, y)] = floortex[texturePixelIndex(floortexx, floortexy)];
 
             if(y == drawend)
                 continue;
 
             //ceiling (symmetrical!)
-            params->screen[screenPixelIndex(x, params->screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
+            params->screen[screenPixelIndex(params, x, params->screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
         }
-
-
     }//if world map > 0
 }
 
@@ -310,6 +332,11 @@ void CudaRaycaster::rasterize()
     params.screen = m_screen.data();
     params.screenheight = m_screenheight;
     params.screenwidth = m_screenwidth;
+    params.mapwidth = m_mapwidth;
+    params.mapheight = m_mapheight;
+    params.map = m_map.data();
+    params.textures = m_textures.data();
+    params.texturecount = m_textures.size() / kTexturePixels;
 
     for(int x = 0; x < m_screenwidth; ++x)
         rasterizeColumn(x, &params);
