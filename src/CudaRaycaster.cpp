@@ -99,14 +99,29 @@ const char * CudaRaycaster::getRaycasterTechName() const
     return "cuda";
 }
 
-void CudaRaycaster::rasterizeColumn(int x)
+class CudaRasterizationParams
+{
+public:
+    float camposx;
+    float camposy;
+    float dirx;
+    float diry;
+    float planex;
+    float planey;
+    int screenwidth;
+    int screenheight;
+    unsigned * screen;
+
+};
+
+void CudaRaycaster::rasterizeColumn(int x, const CudaRasterizationParams * params)
 {
     //calculate ray position and direction
-    const float camerax = 2.f * x / static_cast<float>(m_screenwidth) - 1.f; //x-coordinate in camera space
-    const float rayposx = m_camposx;
-    const float rayposy = m_camposy;
-    const float raydirx = m_dirx + m_planex * camerax;
-    const float raydiry = m_diry + m_planey * camerax;
+    const float camerax = 2.f * x / static_cast<float>(params->screenwidth) - 1.f; //x-coordinate in camera space
+    const float rayposx = params->camposx;
+    const float rayposy = params->camposy;
+    const float raydirx = params->dirx + params->planex * camerax;
+    const float raydiry = params->diry + params->planey * camerax;
 
     //which box of the map we're in
     int mapx = static_cast<int>(rayposx);
@@ -176,7 +191,7 @@ void CudaRaycaster::rasterizeColumn(int x)
         perpwalldist = (mapy - rayposy + (1 - stepy) / 2) / raydiry;
 
     //Calculate height of line to draw on screen
-    const int lineheight = static_cast<int>(m_screenheight / perpwalldist);
+    const int lineheight = static_cast<int>(params->screenheight / perpwalldist);
 
     //calculate lowest and highest pixel to fill in current stripe
     int drawstart = -lineheight / 2 + m_screenheight / 2;
@@ -215,7 +230,7 @@ void CudaRaycaster::rasterizeColumn(int x)
             if(side == 1)
                 color = halveRGB(color);
 
-            m_screen[screenPixelIndex(x, y)] = color;
+            params->screen[screenPixelIndex(x, y)] = color;
         }//for y
 
          //FLOOR CASTING:
@@ -255,8 +270,8 @@ void CudaRaycaster::rasterizeColumn(int x)
         {
             const float currentdist = m_screenheight / (2.f * y - m_screenheight); //you could make a small lookup table for this instead
             const float weight = (currentdist - distplayer) / (distwall - distplayer);
-            const float currentfloorx = weight * floorxwall + (1.f - weight) * m_camposx;
-            const float currentfloory = weight * floorywall + (1.f - weight) * m_camposy;
+            const float currentfloorx = weight * floorxwall + (1.f - weight) * params->camposx;
+            const float currentfloory = weight * floorywall + (1.f - weight) * params->camposy;
             const int floortexx = static_cast<int>(currentfloorx * kTextureSize) % kTextureSize;
             const int floortexy = static_cast<int>(currentfloory * kTextureSize) % kTextureSize;
 
@@ -268,13 +283,13 @@ void CudaRaycaster::rasterizeColumn(int x)
                 std::swap(floortex, ceiltex);
 
             //floor
-            m_screen[screenPixelIndex(x, y)] = floortex[texturePixelIndex(floortexx, floortexy)];
+            params->screen[screenPixelIndex(x, y)] = floortex[texturePixelIndex(floortexx, floortexy)];
 
             if(y == drawend)
                 continue;
 
             //ceiling (symmetrical!)
-            m_screen[screenPixelIndex(x, m_screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
+            params->screen[screenPixelIndex(x, params->screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
         }
 
 
@@ -285,8 +300,19 @@ void CudaRaycaster::rasterize()
 {
     m_screen.assign(m_screenpixels, 0x7f7f7fff);
 
+    CudaRasterizationParams params;
+    params.camposx = m_camposx;
+    params.camposy = m_camposy;
+    params.dirx = m_dirx;
+    params.diry = m_diry;
+    params.planex = m_planex;
+    params.planey = m_planey;
+    params.screen = m_screen.data();
+    params.screenheight = m_screenheight;
+    params.screenwidth = m_screenwidth;
+
     for(int x = 0; x < m_screenwidth; ++x)
-        rasterizeColumn(x);
+        rasterizeColumn(x, &params);
 
     //commit to sf image
     for(unsigned i = 0u; i < m_screen.size(); ++i)
