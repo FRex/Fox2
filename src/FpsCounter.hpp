@@ -7,7 +7,7 @@ public:
     float frame()
     {
         ++m_frames;
-        if(m_frames > 60u || m_clock.getElapsedTime().asSeconds() > 1.5f)
+        if(m_frames > 1000u || m_clock.getElapsedTime().asSeconds() > 1.5f)
         {
             m_fps = m_frames / m_clock.getElapsedTime().asSeconds();
             m_frames = 0u;

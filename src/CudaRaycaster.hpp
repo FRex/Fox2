@@ -12,10 +12,10 @@ public:
     virtual void setTexture(unsigned texnum, const sf::Image& img) override;
     virtual void setScreenSize(unsigned width, unsigned height) override;
     virtual void downloadImage(sf::Texture& texture) override;
-    virtual void downloadDepthImage(sf::Texture& texture) override;
     virtual void loadMap(const sf::Image& img) override;
     virtual CameraExchangeInfo getCameraInfo() const;
     virtual void setCameraInfo(const CameraExchangeInfo& info);
+    void setName(const std::string& name);
 
 private:
     void setMapSize(unsigned width, unsigned height);
@@ -24,8 +24,6 @@ private:
     const unsigned * getTexture(unsigned num) const;
     unsigned screenPixelIndex(unsigned x, unsigned y);
     unsigned getMapTile(unsigned x, unsigned y) const;
-    void rasterizeDepth();
-    void rasterizeDiffuse();
 
     float m_camposx = 4.5f;
     float m_camposy = 4.5f;
@@ -44,9 +42,7 @@ private:
     std::vector<unsigned> m_map;
     unsigned m_mapwidth;
     unsigned m_mapheight;
-    std::vector<float> m_depthbuffer;
-    sf::Image m_depthimage;
-    std::vector<sf::Uint8> m_greydepthpixels;
+    std::string m_name;
     unsigned * m_cuda_map = 0x0;
 
 };

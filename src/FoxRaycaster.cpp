@@ -34,8 +34,6 @@ namespace fox {
 
 const unsigned kTextureSize = 64u;
 const unsigned kTexturePixels = kTextureSize * kTextureSize;
-const float kClearDepth = 0.f;
-const float kMinDepth = 0.f;
 
 inline unsigned texturePixelIndex(unsigned x, unsigned y)
 {
@@ -95,12 +93,6 @@ const char * FoxRaycaster::getRaycasterTechName() const
 }
 
 void FoxRaycaster::rasterize()
-{
-    rasterizeDiffuse();
-    rasterizeDepth();
-}
-
-void FoxRaycaster::rasterizeDiffuse()
 {
     m_screen.assign(m_screenpixels, 0x7f7f7fff);
 
@@ -374,9 +366,7 @@ void FoxRaycaster::setScreenSize(unsigned width, unsigned height)
     m_screenheight = height;
     m_screenpixels = width * height;
     m_screen.assign(m_screenpixels, 0x7f7f7fff);
-    m_depthbuffer.assign(m_screenpixels, kClearDepth);
     m_sfbuffer.resize(m_screenpixels * 4u);
-    m_greydepthpixels.resize(m_screenpixels * 4u);
 }
 
 void FoxRaycaster::setMapSize(unsigned width, unsigned height)
@@ -410,11 +400,6 @@ void FoxRaycaster::setMapTile(unsigned x, unsigned y, unsigned tile)
 void FoxRaycaster::downloadImage(sf::Texture& texture)
 {
     texture.loadFromImage(m_sfimage);
-}
-
-void FoxRaycaster::downloadDepthImage(sf::Texture& texture)
-{
-    texture.loadFromImage(m_depthimage);
 }
 
 void FoxRaycaster::loadMap(const sf::Image& img)
@@ -479,141 +464,6 @@ unsigned FoxRaycaster::getMapTile(unsigned x, unsigned y) const
         return m_map[x + m_mapwidth * y];
 
     return 1u;
-}
-
-void FoxRaycaster::rasterizeDepth()
-{
-    m_depthbuffer.assign(m_screenpixels, kClearDepth);
-    float maxdepth = kMinDepth;
-
-    for(int x = 0; x < m_screenwidth; ++x)
-    {
-        //calculate ray position and direction
-        const float camerax = 2.f * x / static_cast<float>(m_screenwidth) - 1.f; //x-coordinate in camera space
-        const float rayposx = m_camposx;
-        const float rayposy = m_camposy;
-        const float raydirx = m_dirx + m_planex * camerax;
-        const float raydiry = m_diry + m_planey * camerax;
-
-        //which box of the map we're in
-        int mapx = static_cast<int>(rayposx);
-        int mapy = static_cast<int>(rayposy);
-
-        //length of ray from current position to next x or y-side
-        float sidedistx;
-        float sidedisty;
-
-        //length of ray from one x or y-side to next x or y-side
-        const float deltadistx = std::sqrt(1 + (raydiry * raydiry) / (raydirx * raydirx));
-        const float deltadisty = std::sqrt(1 + (raydirx * raydirx) / (raydiry * raydiry));
-        float perpwalldist;
-
-        //what direction to step in x or y-direction (either +1 or -1)
-        int stepx;
-        int stepy;
-
-        int hit = 0; //was there a wall hit?
-        int side; //was a NS or a EW wall hit?
-                  //calculate step and initial sideDist
-
-        if(raydirx < 0)
-        {
-            stepx = -1;
-            sidedistx = (rayposx - mapx) * deltadistx;
-        }
-        else
-        {
-            stepx = 1;
-            sidedistx = (mapx + 1.f - rayposx) * deltadistx;
-        }
-
-        if(raydiry < 0)
-        {
-            stepy = -1;
-            sidedisty = (rayposy - mapy) * deltadisty;
-        }
-        else
-        {
-            stepy = 1;
-            sidedisty = (mapy + 1.f - rayposy) * deltadisty;
-        }
-
-        //perform DDA
-        while(hit == 0)
-        {
-            //jump to next map square, OR in x-direction, OR in y-direction
-            if(sidedistx < sidedisty)
-            {
-                sidedistx += deltadistx;
-                mapx += stepx;
-                side = 0;
-            }
-            else
-            {
-                sidedisty += deltadisty;
-                mapy += stepy;
-                side = 1;
-            }
-            //Check if ray has hit a wall
-            hit = getMapTile(mapx, mapy) > 0u;
-        }
-
-        //Calculate distance projected on camera direction (oblique distance will give fisheye effect!)
-        if(side == 0)
-            perpwalldist = (mapx - rayposx + (1 - stepx) / 2) / raydirx;
-        else
-            perpwalldist = (mapy - rayposy + (1 - stepy) / 2) / raydiry;
-
-        //Calculate height of line to draw on screen
-        const int lineheight = static_cast<int>(m_screenheight / perpwalldist);
-
-        //calculate lowest and highest pixel to fill in current stripe
-        int drawstart = -lineheight / 2 + m_screenheight / 2;
-        if(drawstart < 0)
-            drawstart = 0;
-
-        int drawend = lineheight / 2 + m_screenheight / 2;
-        if(drawend >= m_screenheight)
-            drawend = m_screenheight - 1;
-
-        maxdepth = std::max(maxdepth, perpwalldist);
-
-        //choose wall color
-        if(getMapTile(mapx, mapy) > 0)
-        {
-            for(int y = drawstart; y < drawend; y++)
-                m_depthbuffer[screenPixelIndex(x, y)] = perpwalldist;
-
-            if(drawend < 0)
-                drawend = m_screenheight; //becomes < 0 when the integer overflows
-
-            //draw the floor from drawEnd to the bottom of the screen
-            for(int y = drawend; y < m_screenheight; ++y)
-            {
-                const float currentdist = m_screenheight / (2.f * y - m_screenheight); //you could make a small lookup table for this instead
-
-                maxdepth = std::max(maxdepth, currentdist);
-
-                //floor
-                m_depthbuffer[screenPixelIndex(x, y)] = currentdist;
-                if(y == drawend)
-                    continue;
-
-                //ceiling (symmetrical!)
-                m_depthbuffer[screenPixelIndex(x, m_screenheight - y)] = currentdist;
-            }
-        }//if world map > 0
-    }//for x
-
-    for(unsigned i = 0u; i < m_depthbuffer.size(); ++i)
-    {
-        const float x = 255.f * (m_depthbuffer[i] / maxdepth);
-        m_greydepthpixels[i * 4 + 0] = x;
-        m_greydepthpixels[i * 4 + 1] = x;
-        m_greydepthpixels[i * 4 + 2] = x;
-        m_greydepthpixels[i * 4 + 3] = 255u;
-    }//for each f in m depth buffer
-    m_depthimage.create(m_screenwidth, m_screenheight, m_greydepthpixels.data());
 }
 
 }//fox

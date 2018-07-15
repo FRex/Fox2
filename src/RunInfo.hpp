@@ -21,7 +21,6 @@ public:
         ss << "(R) Stretch:    " << stretch << std::endl;
         ss << "(T) Smooth:     " << smooth << std::endl;
         ss << "(Y) Resolution: " << kResolutions[resolution].x << 'x' << kResolutions[resolution].y << std::endl;
-        ss << "(U) Depthdraw:  " << depthdraw << std::endl;
         ss << "(I) Type:       " << rendertype << std::endl;
         return ss.str();
     }
@@ -35,7 +34,6 @@ public:
     bool stretch = false;
     bool smooth = false;
     unsigned resolution = 0u;
-    bool depthdraw = false;
     const char * rendertype = "";
 
 };

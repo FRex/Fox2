@@ -26,7 +26,6 @@ public:
     virtual void setScreenSize(unsigned width, unsigned height) = 0;
     virtual void setTexture(unsigned texnum, const sf::Image& img) = 0;
     virtual void downloadImage(sf::Texture& texture) = 0;
-    virtual void downloadDepthImage(sf::Texture& texture) = 0;
     virtual void loadMap(const sf::Image& img) = 0;
     virtual void handleKeys() = 0;
     virtual CameraExchangeInfo getCameraInfo() const = 0;
