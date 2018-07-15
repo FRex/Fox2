@@ -15,7 +15,6 @@ public:
     virtual void loadMap(const sf::Image& img) override;
     virtual CameraExchangeInfo getCameraInfo() const;
     virtual void setCameraInfo(const CameraExchangeInfo& info);
-    void setName(const std::string& name);
 
 private:
     void setMapSize(unsigned width, unsigned height);
@@ -24,6 +23,7 @@ private:
     const unsigned * getTexture(unsigned num) const;
     unsigned screenPixelIndex(unsigned x, unsigned y);
     unsigned getMapTile(unsigned x, unsigned y) const;
+    void rasterizeColumn(int x);
 
     float m_camposx = 4.5f;
     float m_camposy = 4.5f;
@@ -42,7 +42,6 @@ private:
     std::vector<unsigned> m_map;
     unsigned m_mapwidth;
     unsigned m_mapheight;
-    std::string m_name;
     unsigned * m_cuda_map = 0x0;
 
 };
