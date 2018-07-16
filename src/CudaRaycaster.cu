@@ -392,9 +392,12 @@ __global__ void clearScreen(unsigned * screen, unsigned width, unsigned height, 
 }
 
 
+//MEMERROR 77 IN THIS
 __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
 {
     const int x = blockIdx.x;
+    if(x >= params->screenwidth)
+        return;
 
     //calculate ray position and direction
     const float camerax = 2.f * x / static_cast<float>(params->screenwidth) - 1.f; //x-coordinate in camera space
@@ -616,8 +619,8 @@ void CudaRaycaster::rasterize()
 
 
     //causes error?
-    //cuda_rasterizeColumn <<<m_screenwidth, 1 >>> (&params);
-
+    cuda_rasterizeColumn << <m_screenwidth, 1 >> > (m_cuda_rast_params);
+    checkCudaCall(cudaGetLastError());
 
     //checkCudaCall(cudaMemcpy(m_screen, m_cuda_screen, m_screenpixels * 4u, cudaMemcpyDeviceToHost));
 
