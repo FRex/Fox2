@@ -391,8 +391,6 @@ __global__ void clearScreen(unsigned * screen, unsigned width, unsigned height, 
         row[i] = color;
 }
 
-
-//MEMERROR 77 IN THIS
 __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
 {
     const int x = blockIdx.x;
