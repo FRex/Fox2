@@ -563,6 +563,16 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
             params->screen[cuda_screenPixelIndex(params, x, params->screenheight - y)] = ceiltex[cuda_texturePixelIndex(floortexx, floortexy)];
         }
     }//if world map > 0
+
+    for(int y = 0; y < params->screenheight; ++y)
+    {
+        const unsigned n = params->screen[cuda_screenPixelIndex(params, x, y)];
+        params->screen[cuda_screenPixelIndex(params, x, y)] =
+            ((n >> 24) & 0xff)    |
+            ((n << 8) & 0xff0000) |
+            ((n >> 8) & 0xff00)   |
+            ((n << 24) & 0xff000000);
+    }
 }
 
 void CudaRaycaster::rasterize()
@@ -586,18 +596,6 @@ void CudaRaycaster::rasterize()
     checkCudaCall(cudaMemcpy(m_cuda_rast_params.ptr(), &params, sizeof(CudaRasterizationParams), cudaMemcpyHostToDevice));
     clearScreen << <m_screenheight, 1 >> > (m_cuda_screen.ptr(), m_screenwidth, m_screenheight, 0x7f7f7fff);
     cuda_rasterizeColumn << <m_screenwidth, 1 >> > (m_cuda_rast_params.ptr());
-    checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen.ptr(), m_screenpixels * 4u, cudaMemcpyDeviceToHost));
-
-    //commit to sf image
-    for(unsigned i = 0u; i < m_screen.size(); ++i)
-    {
-        m_sfbuffer[i * 4 + 0] = (m_screen[i] >> 24) & 0xff;
-        m_sfbuffer[i * 4 + 1] = (m_screen[i] >> 16) & 0xff;
-        m_sfbuffer[i * 4 + 2] = (m_screen[i] >> 8) & 0xff;
-        m_sfbuffer[i * 4 + 3] = (m_screen[i] >> 0) & 0xff;
-    }//for i
-
-    m_sfimage.create(m_screenwidth, m_screenheight, m_sfbuffer.data());
 }
 
 void CudaRaycaster::handleKeys()
@@ -714,7 +712,11 @@ void CudaRaycaster::setMapTile(unsigned x, unsigned y, unsigned tile)
 
 void CudaRaycaster::downloadImage(sf::Texture& texture)
 {
-    texture.loadFromImage(m_sfimage);
+    if(texture.getSize() != sf::Vector2u(m_screenwidth, m_screenheight))
+        texture.create(m_screenwidth, m_screenheight);
+
+    checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen.ptr(), m_screenpixels * 4u, cudaMemcpyDeviceToHost));
+    texture.update(reinterpret_cast<sf::Uint8*>(m_screen.data()));
 }
 
 void CudaRaycaster::loadMap(const sf::Image& img)
