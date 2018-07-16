@@ -5,6 +5,7 @@
 #include <SFML/Graphics/Texture.hpp>
 #include "cuda_runtime_api.h"
 #include "device_launch_parameters.h"
+#include "checkCudaCall.hpp"
 
 /*
 Original raycasting code from tutorials at: http://lodev.org/cgtutor/index.html
@@ -34,14 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 const unsigned kTextureSize = 64u;
 const unsigned kTexturePixels = kTextureSize * kTextureSize;
-
-inline void impl_checkCudaCall(cudaError_t ret, const char * file, int line)
-{
-    if(ret != cudaSuccess)
-        fprintf(stderr, "%s:%d: cuda error %d\n", file, line, static_cast<int>(ret));
-}
-
-#define checkCudaCall(r) impl_checkCudaCall(r, __FILE__, __LINE__)
 
 inline unsigned texturePixelIndex(unsigned x, unsigned y)
 {
