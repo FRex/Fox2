@@ -567,10 +567,6 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
 
 void CudaRaycaster::rasterize()
 {
-    m_screen.assign(m_screenpixels, 0x7f7f7fff);
-
-
-
     CudaRasterizationParams params;
     params.camposx = m_camposx;
     params.camposy = m_camposy;
@@ -578,39 +574,19 @@ void CudaRaycaster::rasterize()
     params.diry = m_diry;
     params.planex = m_planex;
     params.planey = m_planey;
-    params.screen = m_screen.data();
+    params.screen = m_cuda_screen.ptr();
     params.screenheight = m_screenheight;
     params.screenwidth = m_screenwidth;
     params.mapwidth = m_mapwidth;
     params.mapheight = m_mapheight;
-    params.map = m_map.data();
-    params.textures = m_textures.data();
-    params.texturecount = m_textures.size() / kTexturePixels;
-
-    for(int x = 0; x < m_screenwidth; ++x)
-        rasterizeColumn(x, &params);
-
-
-
     params.map = m_cuda_map.ptr();
     params.textures = m_cuda_textures.ptr();
-    params.screen = m_cuda_screen.ptr();
     params.texturecount = m_cuda_textures.size() / kTexturePixels;
 
-
     checkCudaCall(cudaMemcpy(m_cuda_rast_params.ptr(), &params, sizeof(CudaRasterizationParams), cudaMemcpyHostToDevice));
-
     clearScreen << <m_screenheight, 1 >> > (m_cuda_screen.ptr(), m_screenwidth, m_screenheight, 0x7f7f7fff);
-
-
-    //causes error?
     cuda_rasterizeColumn << <m_screenwidth, 1 >> > (m_cuda_rast_params.ptr());
-    checkCudaCall(cudaGetLastError());
-
-    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-        checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen.ptr(), m_screenpixels * 4u, cudaMemcpyDeviceToHost));
-
-
+    checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen.ptr(), m_screenpixels * 4u, cudaMemcpyDeviceToHost));
 
     //commit to sf image
     for(unsigned i = 0u; i < m_screen.size(); ++i)
@@ -622,11 +598,6 @@ void CudaRaycaster::rasterize()
     }//for i
 
     m_sfimage.create(m_screenwidth, m_screenheight, m_sfbuffer.data());
-
-
-
-
-
 }
 
 void CudaRaycaster::handleKeys()
