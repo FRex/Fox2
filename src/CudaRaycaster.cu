@@ -430,16 +430,15 @@ void CudaRaycaster::setTexture(unsigned texnum, const sf::Image& img)
     if(img.getSize() != sf::Vector2u(kTextureSize, kTextureSize))
         return;
 
-    if((texnum * kTexturePixels) >= m_textures.size())
-        m_textures.resize((texnum + 1u) * kTexturePixels, 0xff00ffff);
-
-    unsigned * t = getTexture(texnum);
+    unsigned tex[kTexturePixels];
     for(int x = 0; x < kTextureSize; ++x)
         for(int y = 0; y < kTextureSize; ++y)
-            t[texturePixelIndex(x, y)] = img.getPixel(x, y).toInteger();
+            tex[texturePixelIndex(x, y)] = img.getPixel(x, y).toInteger();
 
-    m_cuda_textures.resize(m_textures.size());
-    checkCudaCall(cudaMemcpy(m_cuda_textures.ptr(), m_textures.data(), sizeof(unsigned) * m_textures.size(), cudaMemcpyHostToDevice));
+    if((texnum * kTexturePixels) >= m_cuda_textures.size())
+        m_cuda_textures.resize((texnum + 1u) * kTexturePixels);
+
+    checkCudaCall(cudaMemcpy(m_cuda_textures.ptr() + texnum * kTexturePixels, tex, sizeof(unsigned) * kTexturePixels, cudaMemcpyHostToDevice));
 }
 
 void CudaRaycaster::setScreenSize(unsigned width, unsigned height)
@@ -527,27 +526,6 @@ void CudaRaycaster::setCameraInfo(const CameraExchangeInfo& info)
     m_diry = info.diry;
     m_planex = info.planex;
     m_planey = info.planey;
-}
-
-unsigned * CudaRaycaster::getTexture(unsigned texnum)
-{
-    if((texnum * kTexturePixels) < m_textures.size())
-        return m_textures.data() + texnum * kTexturePixels;
-
-    return m_textures.data(); //jorge
-}
-
-const unsigned * CudaRaycaster::getTexture(unsigned texnum) const
-{
-    if((texnum * kTexturePixels) < m_textures.size())
-        return m_textures.data() + texnum * kTexturePixels;
-
-    return m_textures.data(); //jorge
-}
-
-unsigned CudaRaycaster::screenPixelIndex(unsigned x, unsigned y)
-{
-    return x + m_screenwidth * y;
 }
 
 unsigned CudaRaycaster::getMapTile(unsigned x, unsigned y) const

@@ -35,7 +35,6 @@ private:
     float m_planey = 0.66f;
 
     std::vector<unsigned> m_screen;
-    std::vector<unsigned> m_textures;
     unsigned m_screenwidth;
     unsigned m_screenheight;
     unsigned m_screenpixels;
