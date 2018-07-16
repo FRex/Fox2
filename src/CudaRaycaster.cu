@@ -596,6 +596,7 @@ void CudaRaycaster::rasterize()
     checkCudaCall(cudaMemcpy(m_cuda_rast_params.ptr(), &params, sizeof(CudaRasterizationParams), cudaMemcpyHostToDevice));
     clearScreen << <m_screenheight, 1 >> > (m_cuda_screen.ptr(), m_screenwidth, m_screenheight, 0x7f7f7fff);
     cuda_rasterizeColumn << <m_screenwidth, 1 >> > (m_cuda_rast_params.ptr());
+    checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen.ptr(), m_screenpixels * 4u, cudaMemcpyDeviceToHost));
 }
 
 void CudaRaycaster::handleKeys()
@@ -715,7 +716,6 @@ void CudaRaycaster::downloadImage(sf::Texture& texture)
     if(texture.getSize() != sf::Vector2u(m_screenwidth, m_screenheight))
         texture.create(m_screenwidth, m_screenheight);
 
-    checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen.ptr(), m_screenpixels * 4u, cudaMemcpyDeviceToHost));
     texture.update(reinterpret_cast<sf::Uint8*>(m_screen.data()));
 }
 
