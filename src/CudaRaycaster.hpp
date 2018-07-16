@@ -44,10 +44,9 @@ private:
     std::vector<unsigned> m_map;
     unsigned m_mapwidth;
     unsigned m_mapheight;
-    unsigned * m_cuda_map = 0x0;
+    CudaAutoBuffer<unsigned> m_cuda_map;
     CudaAutoBuffer<unsigned> m_cuda_textures;
-    unsigned m_cuda_texturecount = 0u;
-    unsigned * m_cuda_screen = 0x0;
+    CudaAutoBuffer<unsigned> m_cuda_screen;
     CudaAutoBuffer<CudaRasterizationParams> m_cuda_rast_params;
 
 };

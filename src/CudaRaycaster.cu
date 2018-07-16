@@ -136,7 +136,6 @@ CudaRaycaster::CudaRaycaster()
         }//for y
     }//for x
 
-    m_cuda_texturecount = 1u;
     m_cuda_textures.resize(m_textures.size());
     checkCudaCall(cudaMemcpy(m_cuda_textures.ptr(), m_textures.data(), 4u * kTexturePixels, cudaMemcpyHostToDevice));
     m_cuda_rast_params.resize(1u);
@@ -593,15 +592,15 @@ void CudaRaycaster::rasterize()
 
 
 
-    params.map = m_cuda_map;
+    params.map = m_cuda_map.ptr();
     params.textures = m_cuda_textures.ptr();
-    params.screen = m_cuda_screen;
-    params.texturecount = m_cuda_texturecount;
+    params.screen = m_cuda_screen.ptr();
+    params.texturecount = m_cuda_textures.size() / kTexturePixels;
 
 
     checkCudaCall(cudaMemcpy(m_cuda_rast_params.ptr(), &params, sizeof(CudaRasterizationParams), cudaMemcpyHostToDevice));
 
-    clearScreen << <m_screenheight, 1 >> > (m_cuda_screen, m_screenwidth, m_screenheight, 0x7f7f7fff);
+    clearScreen << <m_screenheight, 1 >> > (m_cuda_screen.ptr(), m_screenwidth, m_screenheight, 0x7f7f7fff);
 
 
     //causes error?
@@ -609,7 +608,7 @@ void CudaRaycaster::rasterize()
     checkCudaCall(cudaGetLastError());
 
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-        checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen, m_screenpixels * 4u, cudaMemcpyDeviceToHost));
+        checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen.ptr(), m_screenpixels * 4u, cudaMemcpyDeviceToHost));
 
 
 
@@ -697,7 +696,6 @@ void CudaRaycaster::setTexture(unsigned texnum, const sf::Image& img)
 
     m_cuda_textures.resize(m_textures.size());
     checkCudaCall(cudaMemcpy(m_cuda_textures.ptr(), m_textures.data(), sizeof(unsigned) * m_textures.size(), cudaMemcpyHostToDevice));
-    m_cuda_texturecount = m_cuda_textures.size() / kTexturePixels;
 }
 
 void CudaRaycaster::setScreenSize(unsigned width, unsigned height)
@@ -712,12 +710,7 @@ void CudaRaycaster::setScreenSize(unsigned width, unsigned height)
     m_screen.assign(m_screenpixels, 0x7f7f7fff);
     m_sfbuffer.resize(m_screenpixels * 4u);
 
-    if(m_cuda_screen)
-        checkCudaCall(cudaFree(m_cuda_screen));
-
-    void * ptr = 0x0;
-    checkCudaCall(cudaMalloc(&ptr, sizeof(unsigned) * m_screenpixels));
-    m_cuda_screen = static_cast<unsigned*>(ptr);
+    m_cuda_screen.resize(m_screenpixels);
 }
 
 void CudaRaycaster::setMapSize(unsigned width, unsigned height)
@@ -755,9 +748,6 @@ void CudaRaycaster::downloadImage(sf::Texture& texture)
 
 void CudaRaycaster::loadMap(const sf::Image& img)
 {
-    if(m_cuda_map)
-        checkCudaCall(cudaFree(static_cast<void*>(m_cuda_map)));
-
     std::vector<unsigned> tiles;
     const auto ims = img.getSize();
     m_mapwidth = ims.x;
@@ -767,11 +757,8 @@ void CudaRaycaster::loadMap(const sf::Image& img)
             tiles.push_back(img.getPixel(x, y) != sf::Color::Black);
 
     m_map = tiles;
-
-    void * ptr;
-    checkCudaCall(cudaMalloc(&ptr, tiles.size() * sizeof(tiles[0])));
-    m_cuda_map = static_cast<unsigned*>(ptr);
-    checkCudaCall(cudaMemcpy(m_cuda_map, tiles.data(), sizeof(tiles[0]) * tiles.size(), cudaMemcpyHostToDevice));
+    m_cuda_map.resize(tiles.size());
+    checkCudaCall(cudaMemcpy(m_cuda_map.ptr(), tiles.data(), sizeof(tiles[0]) * tiles.size(), cudaMemcpyHostToDevice));
 }
 
 CameraExchangeInfo CudaRaycaster::getCameraInfo() const
