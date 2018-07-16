@@ -17,9 +17,11 @@ public:
     {
         std::ostringstream ss;
         ss << std::boolalpha;
-        ss << "FPS:  " << fps << std::endl;
+        ss << "FPS:   " << fps << std::endl;
+        ss << "RTime: " << rastertime << std::endl;
         ss << "(R) Stretch:    " << stretch << std::endl;
         ss << "(T) Smooth:     " << smooth << std::endl;
+        ss << "(U) 60FPS lock: " << fpslock << std::endl;
         ss << "(Y) Resolution: " << kResolutions[resolution].x << 'x' << kResolutions[resolution].y << std::endl;
         ss << "(I) Type:       " << rendertype << std::endl;
         return ss.str();
@@ -35,5 +37,7 @@ public:
     bool smooth = false;
     unsigned resolution = 0u;
     const char * rendertype = "";
+    bool fpslock = false;
+    float rastertime = 0.f;
 
 };

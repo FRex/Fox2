@@ -52,6 +52,10 @@ int main(int argc, char ** argv)
                     runinfo.resolution = (runinfo.resolution + 1) % kResolutionsCount;
                     currentraycaster->setScreenSize(runinfo.getResolution().x, runinfo.getResolution().y);
                     break;
+                case sf::Keyboard::U:
+                    runinfo.fpslock = !runinfo.fpslock;
+                    app.setFramerateLimit(60u * runinfo.fpslock);
+                    break;
                 case sf::Keyboard::I:
                     manager.switchInterface();
                     currentraycaster = manager.getCurrentInterface();
@@ -64,7 +68,10 @@ int main(int argc, char ** argv)
 
         app.clear(sf::Color(0x2d0022ff));
         currentraycaster->handleKeys();
+        sf::Clock clo;
         currentraycaster->rasterize();
+        runinfo.rastertime = clo.getElapsedTime().asSeconds();
+
         currentraycaster->downloadImage(tex);
         sf::Sprite spr(tex);
         tex.setSmooth(runinfo.smooth);
