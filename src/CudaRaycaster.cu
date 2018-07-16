@@ -622,7 +622,8 @@ void CudaRaycaster::rasterize()
     cuda_rasterizeColumn << <m_screenwidth, 1 >> > (m_cuda_rast_params);
     checkCudaCall(cudaGetLastError());
 
-    //checkCudaCall(cudaMemcpy(m_screen, m_cuda_screen, m_screenpixels * 4u, cudaMemcpyDeviceToHost));
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+        checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen, m_screenpixels * 4u, cudaMemcpyDeviceToHost));
 
 
 
