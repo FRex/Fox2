@@ -136,15 +136,10 @@ CudaRaycaster::CudaRaycaster()
         }//for y
     }//for x
 
-    void * ptr = 0x0;
-    checkCudaCall(cudaMalloc(&ptr, sizeof(m_textures[0]) * m_textures.size()));
     m_cuda_texturecount = 1u;
-    m_cuda_textures = static_cast<unsigned*>(ptr);
-    checkCudaCall(cudaMemcpy(m_cuda_textures, m_textures.data(), 4u * kTexturePixels, cudaMemcpyHostToDevice));
-
-    ptr = 0x0;
-    checkCudaCall(cudaMalloc(&ptr, sizeof(CudaRasterizationParams)));
-    m_cuda_rast_params = static_cast<CudaRasterizationParams*>(ptr);
+    m_cuda_textures.resize(m_textures.size());
+    checkCudaCall(cudaMemcpy(m_cuda_textures.ptr(), m_textures.data(), 4u * kTexturePixels, cudaMemcpyHostToDevice));
+    m_cuda_rast_params.resize(1u);
 }
 
 const char * CudaRaycaster::getRaycasterTechName() const
@@ -599,18 +594,18 @@ void CudaRaycaster::rasterize()
 
 
     params.map = m_cuda_map;
-    params.textures = m_cuda_textures;
+    params.textures = m_cuda_textures.ptr();
     params.screen = m_cuda_screen;
     params.texturecount = m_cuda_texturecount;
 
 
-    checkCudaCall(cudaMemcpy(m_cuda_rast_params, &params, sizeof(CudaRasterizationParams), cudaMemcpyHostToDevice));
+    checkCudaCall(cudaMemcpy(m_cuda_rast_params.ptr(), &params, sizeof(CudaRasterizationParams), cudaMemcpyHostToDevice));
 
     clearScreen << <m_screenheight, 1 >> > (m_cuda_screen, m_screenwidth, m_screenheight, 0x7f7f7fff);
 
 
     //causes error?
-    cuda_rasterizeColumn << <m_screenwidth, 1 >> > (m_cuda_rast_params);
+    cuda_rasterizeColumn << <m_screenwidth, 1 >> > (m_cuda_rast_params.ptr());
     checkCudaCall(cudaGetLastError());
 
     if(sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
@@ -699,6 +694,10 @@ void CudaRaycaster::setTexture(unsigned texnum, const sf::Image& img)
     for(int x = 0; x < kTextureSize; ++x)
         for(int y = 0; y < kTextureSize; ++y)
             t[texturePixelIndex(x, y)] = img.getPixel(x, y).toInteger();
+
+    m_cuda_textures.resize(m_textures.size());
+    checkCudaCall(cudaMemcpy(m_cuda_textures.ptr(), m_textures.data(), sizeof(unsigned) * m_textures.size(), cudaMemcpyHostToDevice));
+    m_cuda_texturecount = m_cuda_textures.size() / kTexturePixels;
 }
 
 void CudaRaycaster::setScreenSize(unsigned width, unsigned height)
