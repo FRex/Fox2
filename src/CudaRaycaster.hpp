@@ -36,8 +36,6 @@ private:
 
     std::vector<unsigned> m_screen;
     std::vector<unsigned> m_textures;
-    std::vector<sf::Uint8> m_sfbuffer;
-    sf::Image m_sfimage;
     unsigned m_screenwidth;
     unsigned m_screenheight;
     unsigned m_screenpixels;
