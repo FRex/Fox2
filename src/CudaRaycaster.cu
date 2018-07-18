@@ -38,13 +38,11 @@ const unsigned kTexturePixels = kTextureSize * kTextureSize;
 
 inline unsigned texturePixelIndex(unsigned x, unsigned y)
 {
-    return y + kTextureSize * x;
     return x + kTextureSize * y;
 }
 
 __device__ unsigned cuda_texturePixelIndex(unsigned x, unsigned y)
 {
-    return y + kTextureSize * x;
     return x + kTextureSize * y;
 }
 
@@ -309,8 +307,10 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
         if(drawend < 0)
             drawend = params->screenheight; //becomes < 0 when the integer overflows
 
-                                            //draw the floor from drawEnd to the bottom of the screen
-        for(int y = drawend; y < params->screenheight; ++y)
+        //draw the floor from drawEnd to the bottom of the screen
+        const unsigned * origfloortex = cuda_getTexture(params, 2u);
+        const unsigned * origceiltex = cuda_getTexture(params, 0u);
+        for(int y = drawend + 1; y < params->screenheight; ++y)
         {
             const float currentdist = params->screenheight / (2.f * y - params->screenheight); //you could make a small lookup table for this instead
             const float weight = (currentdist - distplayer) / (distwall - distplayer);
@@ -319,9 +319,8 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
             const int floortexx = static_cast<int>(currentfloorx * kTextureSize) % kTextureSize;
             const int floortexy = static_cast<int>(currentfloory * kTextureSize) % kTextureSize;
 
-            const unsigned * floortex = cuda_getTexture(params, 2u);
-            const unsigned * ceiltex = cuda_getTexture(params, 0u);
-
+            const unsigned * floortex = origfloortex;
+            const unsigned * ceiltex = origceiltex;
             if((static_cast<int>(currentfloorx) + static_cast<int>(currentfloory)) % 2)
             {
                 const unsigned * tmp = floortex;
@@ -329,13 +328,8 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
                 ceiltex = tmp;
             }
 
-            //floor
+            //floor and symmetrical ceiling
             params->screen[cuda_screenPixelIndex(params, x, y)] = floortex[cuda_texturePixelIndex(floortexx, floortexy)];
-
-            if(y == drawend)
-                continue;
-
-            //ceiling (symmetrical!)
             params->screen[cuda_screenPixelIndex(params, x, params->screenheight - y)] = ceiltex[cuda_texturePixelIndex(floortexx, floortexy)];
         }
     }//if world map > 0
