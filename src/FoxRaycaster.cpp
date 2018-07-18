@@ -205,12 +205,11 @@ void FoxRaycaster::rasterize()
             if(side == 1 && raydiry < 0)
                 texx = kTextureSize - texx - 1;
 
+            const unsigned * tex0 = getTexture(getMapTile(mapx, mapy));
             for(int y = drawstart; y < drawend; y++)
             {
                 const int d = y * 256 - m_screenheight * 128 + lineheight * 128;  //256 and 128 factors to avoid floats
                 const int texy = ((d * kTextureSize) / lineheight) / 256;
-                const unsigned * tex0 = getTexture(getMapTile(mapx, mapy));
-
                 unsigned color = tex0[texturePixelIndex(texx, texy)];
                 if(side == 1)
                     color = halveRGB(color);
