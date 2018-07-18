@@ -38,11 +38,13 @@ const unsigned kTexturePixels = kTextureSize * kTextureSize;
 
 inline unsigned texturePixelIndex(unsigned x, unsigned y)
 {
+    return y + kTextureSize * x;
     return x + kTextureSize * y;
 }
 
 __device__ unsigned cuda_texturePixelIndex(unsigned x, unsigned y)
 {
+    return y + kTextureSize * x;
     return x + kTextureSize * y;
 }
 

@@ -22,9 +22,6 @@ public:
 private:
     void setMapSize(unsigned width, unsigned height);
     void setMapTile(unsigned x, unsigned y, unsigned tile);
-    unsigned * getTexture(unsigned num);
-    const unsigned * getTexture(unsigned num) const;
-    unsigned screenPixelIndex(unsigned x, unsigned y);
     unsigned getMapTile(unsigned x, unsigned y) const;
 
     float m_camposx = 4.5f;
