@@ -61,31 +61,39 @@ int main(int argc, char ** argv)
                     currentraycaster = manager.getCurrentInterface();
                     currentraycaster->setScreenSize(runinfo.getResolution().x, runinfo.getResolution().y);
                     break;
+                case sf::Keyboard::O:
+                    runinfo.rasteronly = !runinfo.rasteronly;
+                    break;
                 }//switch eve key code
                 break;
             }
         }//while app poll event eve
 
         app.clear(sf::Color(0x2d0022ff));
-        currentraycaster->handleKeys();
+        if(!runinfo.rasteronly)
+            currentraycaster->handleKeys();
+
         sf::Clock clo;
         currentraycaster->rasterize();
         runinfo.rastertime = clo.getElapsedTime().asSeconds();
 
-        currentraycaster->downloadImage(tex);
-        sf::Sprite spr(tex);
-        tex.setSmooth(runinfo.smooth);
-        if(runinfo.stretch)
+        if(!runinfo.rasteronly)
         {
-            const auto ts = sf::Vector2f(tex.getSize());
-            const auto ws = sf::Vector2f(app.getSize());
-            const float s = std::min(ws.x / ts.x, ws.y / ts.y);
-            spr.setScale(s, s);
-        }//if runinfo stretch
+            currentraycaster->downloadImage(tex);
+            sf::Sprite spr(tex);
+            tex.setSmooth(runinfo.smooth);
+            if(runinfo.stretch)
+            {
+                const auto ts = sf::Vector2f(tex.getSize());
+                const auto ws = sf::Vector2f(app.getSize());
+                const float s = std::min(ws.x / ts.x, ws.y / ts.y);
+                spr.setScale(s, s);
+            }//if runinfo stretch
 
-        spr.setOrigin(sf::Vector2f(tex.getSize()) / 2.f);
-        spr.setPosition(sf::Vector2f(app.getSize()) / 2.f);
-        app.draw(spr);
+            spr.setOrigin(sf::Vector2f(tex.getSize()) / 2.f);
+            spr.setPosition(sf::Vector2f(app.getSize()) / 2.f);
+            app.draw(spr);
+        }//if not runinfo rasteronly
 
         runinfo.rendertype = currentraycaster->getRaycasterTechName();
         sf::Text txt(runinfo.toString(), font);

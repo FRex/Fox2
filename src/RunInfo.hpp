@@ -24,6 +24,7 @@ public:
         ss << "(U) 60FPS lock: " << fpslock << std::endl;
         ss << "(Y) Resolution: " << kResolutions[resolution].x << 'x' << kResolutions[resolution].y << std::endl;
         ss << "(I) Type:       " << rendertype << std::endl;
+        ss << "(O) Rasteronly: " << rasteronly << std::endl;
         return ss.str();
     }
 
@@ -39,5 +40,6 @@ public:
     const char * rendertype = "";
     bool fpslock = false;
     float rastertime = 0.f;
+    bool rasteronly = false;
 
 };
