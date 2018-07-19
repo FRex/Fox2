@@ -76,7 +76,7 @@ CudaRaycaster::CudaRaycaster()
 
 const char * CudaRaycaster::getRaycasterTechName() const
 {
-    return "cuda";
+    return m_name.c_str();
 }
 
 inline unsigned getMapTile(const CudaRasterizationParams * params, unsigned x, unsigned y)
@@ -117,7 +117,7 @@ __global__ void clearScreen(unsigned * screen, unsigned width, unsigned height, 
 
 __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
 {
-    const int x = blockIdx.x;
+    const int x = blockIdx.x * blockDim.x + threadIdx.x;
     if(x >= params->screenwidth)
         return;
 
@@ -319,7 +319,9 @@ void CudaRaycaster::rasterize()
 
     checkCudaCall(cudaMemcpy(m_cuda_rast_params.ptr(), &params, sizeof(CudaRasterizationParams), cudaMemcpyHostToDevice));
     //clearScreen << <m_screenheight, 1 >> > (m_cuda_screen.ptr(), m_screenwidth, m_screenheight, 0x7f7f7fff);
-    cuda_rasterizeColumn << <m_screenwidth, 1 >> > (m_cuda_rast_params.ptr());
+    const int tc = m_threadsperblock;
+    const int bc = (m_screenwidth + tc - 1) / tc;
+    cuda_rasterizeColumn << <bc, tc>> > (m_cuda_rast_params.ptr());
     checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen.ptr(), m_screenpixels * 4u, cudaMemcpyDeviceToHost));
 }
 
@@ -479,6 +481,15 @@ void CudaRaycaster::setCameraInfo(const CameraExchangeInfo& info)
     m_diry = info.diry;
     m_planex = info.planex;
     m_planey = info.planey;
+}
+
+void CudaRaycaster::setThreadsPerBlock(int threads)
+{
+    if(threads <= 0)
+        return;
+
+    m_threadsperblock = threads;
+    m_name = "cuda(" + std::to_string(threads) + " tpb)";
 }
 
 unsigned CudaRaycaster::getMapTile(unsigned x, unsigned y) const

@@ -18,6 +18,7 @@ public:
     virtual void loadMap(const sf::Image& img) override;
     virtual CameraExchangeInfo getCameraInfo() const;
     virtual void setCameraInfo(const CameraExchangeInfo& info);
+    void setThreadsPerBlock(int threads);
 
 private:
     void setMapSize(unsigned width, unsigned height);
@@ -42,5 +43,7 @@ private:
     CudaAutoBuffer<unsigned> m_cuda_textures;
     CudaAutoBuffer<unsigned> m_cuda_screen;
     CudaAutoBuffer<CudaRasterizationParams> m_cuda_rast_params;
+    int m_threadsperblock = 1;
+    std::string m_name;
 
 };
