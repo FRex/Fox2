@@ -17,7 +17,8 @@ int main(int argc, char ** argv)
 
     BackendManager manager;
     manager.addBackend<fox::FoxRaycaster>();
-    manager.addBackend<CudaRaycaster>()->setThreadsPerBlock(16);
+    const int tpb = (argc < 2) ? 1 : std::atoi(argv[1]);
+    manager.addBackend<CudaRaycaster>()->setThreadsPerBlock(tpb);
     manager.loadResources();
 
     RaycasterInterface * currentraycaster = manager.getCurrentInterface();
