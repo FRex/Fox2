@@ -20,7 +20,6 @@ void AppFox2::run()
 void AppFox2::init()
 {
     m_win.create(sf::VideoMode(640u, 480u), "Fox2");
-    m_win.setFramerateLimit(60u);
     ImGui::SFML::Init(m_win);
     m_manager.addBackend<fox::FoxRaycaster>();
     m_manager.addBackend<CudaRaycaster>();
@@ -57,14 +56,27 @@ void AppFox2::update()
 
 void AppFox2::draw()
 {
+    m_win.setFramerateLimit(60u * m_runsettings.fpslock);
     m_win.clear(sf::Color(0x2d0022ff));
     auto cr = m_manager.getCurrentInterface();
+    cr->setScreenSize(m_runsettings.getResolution().x, m_runsettings.getResolution().y);
     cr->rasterize();
-    cr->downloadImage(m_texture);
-    sf::Sprite spr(m_texture);
-    spr.setOrigin(sf::Vector2f(m_texture.getSize()) / 2.f);
-    spr.setPosition(sf::Vector2f(m_win.getSize()) / 2.f);
-    m_win.draw(spr);
+    if(!m_runsettings.rasteronly)
+    {
+        cr->downloadImage(m_texture);
+        m_texture.setSmooth(m_runsettings.smooth);
+        sf::Sprite spr(m_texture);
+        if(m_runsettings.stretch)
+        {
+            const auto ts = sf::Vector2f(m_texture.getSize());
+            const auto ws = sf::Vector2f(m_win.getSize());
+            const float s = std::min(ws.x / ts.x, ws.y / ts.y);
+            spr.setScale(s, s);
+        }//if stretch
+        spr.setOrigin(sf::Vector2f(m_texture.getSize()) / 2.f);
+        spr.setPosition(sf::Vector2f(m_win.getSize()) / 2.f);
+        m_win.draw(spr);
+    }//if not rasteronly
     ImGui::SFML::Render(m_win);
     m_win.display();
 }
@@ -72,6 +84,15 @@ void AppFox2::draw()
 void AppFox2::gui()
 {
     ImGui::Begin("Fox2");
+    if(ImGui::Button(m_manager.getCurrentInterface()->getRaycasterTechName()))
+        m_manager.switchInterface();
+
+    char buff[128];
+    ImGui::Combo("Resolution", &m_runsettings.resolution, getResolutionText, buff, kResolutionsCount, kResolutionsCount + 1);
     ImGui::Text("FPS: %f\n", m_fpscounter.frame());
+    ImGui::Checkbox("Stretch", &m_runsettings.stretch);
+    ImGui::Checkbox("Smooth", &m_runsettings.smooth);
+    ImGui::Checkbox("60FPS Lock", &m_runsettings.fpslock);
+    ImGui::Checkbox("Raster only", &m_runsettings.rasteronly);
     ImGui::End();
 }

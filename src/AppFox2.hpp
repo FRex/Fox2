@@ -2,7 +2,7 @@
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #include "BackendManager.hpp"
-#include "RunInfo.hpp"
+#include "RunSettings.hpp"
 #include "FpsCounter.hpp"
 
 class AppFox2 : sf::NonCopyable
@@ -22,5 +22,6 @@ private:
     sf::Clock m_guiclock;
     sf::Texture m_texture;
     FpsCounter m_fpscounter;
+    RunSettings m_runsettings;
 
 };

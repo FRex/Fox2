@@ -72,6 +72,7 @@ CudaRaycaster::CudaRaycaster()
     setMapSize(10u, 10u);
     setTexture(0u, makeJorgeImage(kTextureSize));
     m_cuda_rast_params.resize(1u);
+    setThreadsPerBlock(1);
 }
 
 const char * CudaRaycaster::getRaycasterTechName() const
