@@ -35,6 +35,11 @@ public:
         return m_buff.size() / sizeof(T);
     }
 
+    unsigned bytesize() const
+    {
+        return m_buff.size();
+    }
+
 private:
     CudaUntypedAutoBuffer m_buff;
 

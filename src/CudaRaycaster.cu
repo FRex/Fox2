@@ -6,6 +6,7 @@
 #include "cuda_runtime_api.h"
 #include "device_launch_parameters.h"
 #include "checkCudaCall.hpp"
+#include "jorge.hpp"
 
 /*
 Original raycasting code from tutorials at: http://lodev.org/cgtutor/index.html
@@ -55,15 +56,6 @@ __device__ unsigned cuda_halveRGB(unsigned color)
     return (r << 24) + (g << 16) + (b << 8) + a;
 }
 
-unsigned complementRGB(unsigned color)
-{
-    const unsigned char r = 255 - ((color >> 24) & 0xff);
-    const unsigned char g = 255 - ((color >> 16) & 0xff);
-    const unsigned char b = 255 - ((color >> 8) & 0xff);
-    const unsigned char a = color & 0xff;
-    return (r << 24) + (g << 16) + (b << 8) + a;
-}
-
 class CudaRasterizationParams
 {
 public:
@@ -83,31 +75,11 @@ public:
     unsigned texturecount;
 };
 
-static sf::Image makeJorgeImage()
-{
-    sf::Image ret;
-    ret.create(kTextureSize, kTextureSize);
-    for(int x = 0; x < kTextureSize; ++x)
-    {
-        for(int y = 0; y < kTextureSize; ++y)
-        {
-            const int xx = x / 8;
-            const int yy = y / 8;
-            unsigned c = ((xx + yy) % 2 == 0) ? 0xff00ffff : 0x00007fff;
-            if(x - std::abs(static_cast<int>(kTextureSize) - 2 * y) > 0)
-                c = complementRGB(c);
-
-            ret.setPixel(x, y, sf::Color(c));
-        }//for y
-    }//for x
-    return ret;
-}
-
 CudaRaycaster::CudaRaycaster()
 {
     setScreenSize(800u, 600u);
     setMapSize(10u, 10u);
-    setTexture(0u, makeJorgeImage());
+    setTexture(0u, makeJorgeImage(kTextureSize));
     m_cuda_rast_params.resize(1u);
 }
 
@@ -332,16 +304,6 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
             params->screen[cuda_screenPixelIndex(params, x, params->screenheight - y)] = ceiltex[cuda_texturePixelIndex(floortexx, floortexy)];
         }
     }//if world map > 0
-
-    for(int y = 0; y < params->screenheight; ++y)
-    {
-        const unsigned n = params->screen[cuda_screenPixelIndex(params, x, y)];
-        params->screen[cuda_screenPixelIndex(params, x, y)] =
-            ((n >> 24) & 0xff)    |
-            ((n << 8) & 0xff0000) |
-            ((n >> 8) & 0xff00)   |
-            ((n << 24) & 0xff000000);
-    }
 }
 
 void CudaRaycaster::rasterize()
@@ -363,7 +325,7 @@ void CudaRaycaster::rasterize()
     params.texturecount = m_cuda_textures.size() / kTexturePixels;
 
     checkCudaCall(cudaMemcpy(m_cuda_rast_params.ptr(), &params, sizeof(CudaRasterizationParams), cudaMemcpyHostToDevice));
-    clearScreen << <m_screenheight, 1 >> > (m_cuda_screen.ptr(), m_screenwidth, m_screenheight, 0x7f7f7fff);
+    //clearScreen << <m_screenheight, 1 >> > (m_cuda_screen.ptr(), m_screenwidth, m_screenheight, 0x7f7f7fff);
     cuda_rasterizeColumn << <m_screenwidth, 1 >> > (m_cuda_rast_params.ptr());
     checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen.ptr(), m_screenpixels * 4u, cudaMemcpyDeviceToHost));
 }
@@ -420,6 +382,7 @@ void CudaRaycaster::handleKeys()
     }
 }
 
+#define byteswap(v)(((v>>24)&0xff)|((v<<8)&0xff0000)|((v>>8)&0xff00)|((v<<24)&0xff000000))
 void CudaRaycaster::setTexture(unsigned texnum, const sf::Image& img)
 {
     if(img.getSize() != sf::Vector2u(kTextureSize, kTextureSize))
@@ -428,13 +391,14 @@ void CudaRaycaster::setTexture(unsigned texnum, const sf::Image& img)
     unsigned tex[kTexturePixels];
     for(int x = 0; x < kTextureSize; ++x)
         for(int y = 0; y < kTextureSize; ++y)
-            tex[texturePixelIndex(x, y)] = img.getPixel(x, y).toInteger();
+            tex[texturePixelIndex(x, y)] = byteswap(img.getPixel(x, y).toInteger());
 
     if((texnum * kTexturePixels) >= m_cuda_textures.size())
         m_cuda_textures.resize((texnum + 1u) * kTexturePixels);
 
     checkCudaCall(cudaMemcpy(m_cuda_textures.ptr() + texnum * kTexturePixels, tex, sizeof(unsigned) * kTexturePixels, cudaMemcpyHostToDevice));
 }
+#undef byteswap
 
 void CudaRaycaster::setScreenSize(unsigned width, unsigned height)
 {
@@ -448,6 +412,7 @@ void CudaRaycaster::setScreenSize(unsigned width, unsigned height)
     m_screen.assign(m_screenpixels, 0x7f7f7fff);
 
     m_cuda_screen.resize(m_screenpixels);
+    checkCudaCall(cudaMemset(m_cuda_screen.ptr(), 0xff, m_cuda_screen.bytesize()));
 }
 
 void CudaRaycaster::setMapSize(unsigned width, unsigned height)

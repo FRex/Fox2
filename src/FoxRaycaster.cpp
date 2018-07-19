@@ -3,6 +3,7 @@
 #include <SFML/Window/Keyboard.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/Graphics/Texture.hpp>
+#include "jorge.hpp"
 
 /*
 Original raycasting code from tutorials at: http://lodev.org/cgtutor/index.html
@@ -49,42 +50,11 @@ inline unsigned halveRGB(unsigned color)
     return (r << 24) + (g << 16) + (b << 8) + a;
 }
 
-inline unsigned complementRGB(unsigned color)
-{
-    const unsigned char r = 255 - ((color >> 24) & 0xff);
-    const unsigned char g = 255 - ((color >> 16) & 0xff);
-    const unsigned char b = 255 - ((color >> 8) & 0xff);
-    const unsigned char a = color & 0xff;
-    return (r << 24) + (g << 16) + (b << 8) + a;
-}
-
 FoxRaycaster::FoxRaycaster() : m_name("software")
 {
     setScreenSize(800u, 600u);
     setMapSize(10u, 10u);
-
-    //jorge
-    m_textures.assign(kTexturePixels, 0xff);
-    unsigned * tex0 = getTexture(0u);
-    for(int x = 0; x < kTextureSize; ++x)
-    {
-        for(int y = 0; y < kTextureSize; ++y)
-        {
-            const int xx = x / 8;
-            const int yy = y / 8;
-            if((xx + yy) % 2 == 0)
-            {
-                tex0[texturePixelIndex(x, y)] = 0xff00ffff;
-            }
-            else
-            {
-                tex0[texturePixelIndex(x, y)] = 0x00007fff;
-            }
-
-            if(x - std::abs(static_cast<int>(kTextureSize) - 2 * y) > 0)
-                tex0[texturePixelIndex(x, y)] = complementRGB(tex0[texturePixelIndex(x, y)]);
-        }//for y
-    }//for x
+    setTexture(0u, makeJorgeImage(kTextureSize));
 }
 
 const char * FoxRaycaster::getRaycasterTechName() const
@@ -94,8 +64,6 @@ const char * FoxRaycaster::getRaycasterTechName() const
 
 void FoxRaycaster::rasterize()
 {
-    m_screen.assign(m_screenpixels, 0x7f7f7fff);
-
     for(int x = 0; x < m_screenwidth; ++x)
     {
         //calculate ray position and direction
@@ -272,17 +240,6 @@ void FoxRaycaster::rasterize()
 
         }//if world map > 0
     }//for x
-
-    //commit to sf image
-    for(unsigned i = 0u; i < m_screen.size(); ++i)
-    {
-        m_sfbuffer[i * 4 + 0] = (m_screen[i] >> 24) & 0xff;
-        m_sfbuffer[i * 4 + 1] = (m_screen[i] >> 16) & 0xff;
-        m_sfbuffer[i * 4 + 2] = (m_screen[i] >> 8) & 0xff;
-        m_sfbuffer[i * 4 + 3] = (m_screen[i] >> 0) & 0xff;
-    }//for i
-
-    m_sfimage.create(m_screenwidth, m_screenheight, m_sfbuffer.data());
 }
 
 void FoxRaycaster::handleKeys()
@@ -337,6 +294,7 @@ void FoxRaycaster::handleKeys()
     }
 }
 
+#define byteswap(v)(((v>>24)&0xff)|((v<<8)&0xff0000)|((v>>8)&0xff00)|((v<<24)&0xff000000))
 void FoxRaycaster::setTexture(unsigned texnum, const sf::Image& img)
 {
     if(img.getSize() != sf::Vector2u(kTextureSize, kTextureSize))
@@ -348,8 +306,9 @@ void FoxRaycaster::setTexture(unsigned texnum, const sf::Image& img)
     unsigned * t = getTexture(texnum);
     for(int x = 0; x < kTextureSize; ++x)
         for(int y = 0; y < kTextureSize; ++y)
-            t[texturePixelIndex(x, y)] = img.getPixel(x, y).toInteger();
+            t[texturePixelIndex(x, y)] = byteswap(img.getPixel(x, y).toInteger());
 }
+#define byteswap
 
 void FoxRaycaster::setScreenSize(unsigned width, unsigned height)
 {
@@ -360,8 +319,7 @@ void FoxRaycaster::setScreenSize(unsigned width, unsigned height)
     m_screenwidth = width;
     m_screenheight = height;
     m_screenpixels = width * height;
-    m_screen.assign(m_screenpixels, 0x7f7f7fff);
-    m_sfbuffer.resize(m_screenpixels * 4u);
+    m_screen.assign(m_screenpixels, 0xffffffff);
 }
 
 void FoxRaycaster::setMapSize(unsigned width, unsigned height)
@@ -394,7 +352,10 @@ void FoxRaycaster::setMapTile(unsigned x, unsigned y, unsigned tile)
 
 void FoxRaycaster::downloadImage(sf::Texture& texture)
 {
-    texture.loadFromImage(m_sfimage);
+    if(texture.getSize() != sf::Vector2u(m_screenwidth, m_screenheight))
+        texture.create(m_screenwidth, m_screenheight);
+
+    texture.update(reinterpret_cast<sf::Uint8*>(m_screen.data()));
 }
 
 void FoxRaycaster::loadMap(const sf::Image& img)
