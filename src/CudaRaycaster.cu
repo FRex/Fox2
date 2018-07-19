@@ -323,6 +323,7 @@ void CudaRaycaster::rasterize()
     const int tc = m_threadsperblock;
     const int bc = (m_screenwidth + tc - 1) / tc;
     cuda_rasterizeColumn << <bc, tc>> > (m_cuda_rast_params.ptr());
+    checkCudaCall(cudaGetLastError());
     checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen.ptr(), m_screenpixels * 4u, cudaMemcpyDeviceToHost));
 }
 

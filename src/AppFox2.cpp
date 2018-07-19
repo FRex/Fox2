@@ -22,7 +22,7 @@ void AppFox2::init()
     m_win.create(sf::VideoMode(640u, 480u), "Fox2");
     ImGui::SFML::Init(m_win);
     m_manager.addBackend<fox::FoxRaycaster>();
-    m_manager.addBackend<CudaRaycaster>();
+    m_cudaraycaster = m_manager.addBackend<CudaRaycaster>();
     m_manager.loadResources();
     auto cr = m_manager.getCurrentInterface();
     cr->setScreenSize(640u, 480u);
@@ -84,6 +84,8 @@ void AppFox2::draw()
 void AppFox2::gui()
 {
     ImGui::Begin("Fox2");
+    ImGui::Text("Interface");
+    ImGui::SameLine();
     if(ImGui::Button(m_manager.getCurrentInterface()->getRaycasterTechName()))
         m_manager.switchInterface();
 

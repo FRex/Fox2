@@ -5,6 +5,8 @@
 #include "RunSettings.hpp"
 #include "FpsCounter.hpp"
 
+class CudaRaycaster;
+
 class AppFox2 : sf::NonCopyable
 {
 public:
@@ -23,5 +25,5 @@ private:
     sf::Texture m_texture;
     FpsCounter m_fpscounter;
     RunSettings m_runsettings;
-
+    CudaRaycaster * m_cudaraycaster = 0x0;
 };
