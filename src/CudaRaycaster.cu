@@ -47,15 +47,6 @@ __device__ unsigned cuda_texturePixelIndex(unsigned x, unsigned y)
     return x + kTextureSize * y;
 }
 
-__device__ unsigned cuda_halveRGB(unsigned color)
-{
-    const unsigned char r = ((color >> 24) & 0xff) / 2;
-    const unsigned char g = ((color >> 16) & 0xff) / 2;
-    const unsigned char b = ((color >> 8) & 0xff) / 2;
-    const unsigned char a = color & 0xff;
-    return (r << 24) + (g << 16) + (b << 8) + a;
-}
-
 class CudaRasterizationParams
 {
 public:
@@ -240,8 +231,9 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
             const int d = y * 256 - params->screenheight * 128 + lineheight * 128;  //256 and 128 factors to avoid floats
             const int texy = ((d * kTextureSize) / lineheight) / 256;
             unsigned color = tex0[cuda_texturePixelIndex(texx, texy)];
+            //halve all except first component which is a
             if(side == 1)
-                color = cuda_halveRGB(color);
+                color = ((color & 0xff000000u) | ((color >> 1) & 0x7f7f7fu));
 
             params->screen[cuda_screenPixelIndex(params, x, y)] = color;
         }//for y

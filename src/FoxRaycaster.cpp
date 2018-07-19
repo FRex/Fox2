@@ -41,15 +41,6 @@ inline unsigned texturePixelIndex(unsigned x, unsigned y)
     return x + kTextureSize * y;
 }
 
-inline unsigned halveRGB(unsigned color)
-{
-    const unsigned char r = ((color >> 24) & 0xff) / 2;
-    const unsigned char g = ((color >> 16) & 0xff) / 2;
-    const unsigned char b = ((color >> 8) & 0xff) / 2;
-    const unsigned char a = color & 0xff;
-    return (r << 24) + (g << 16) + (b << 8) + a;
-}
-
 FoxRaycaster::FoxRaycaster() : m_name("software")
 {
     setScreenSize(800u, 600u);
@@ -179,8 +170,9 @@ void FoxRaycaster::rasterize()
                 const int d = y * 256 - m_screenheight * 128 + lineheight * 128;  //256 and 128 factors to avoid floats
                 const int texy = ((d * kTextureSize) / lineheight) / 256;
                 unsigned color = tex0[texturePixelIndex(texx, texy)];
+                //halve all except first component which is a
                 if(side == 1)
-                    color = halveRGB(color);
+                    color = ((color & 0xff000000u) | ((color >> 1) & 0x7f7f7fu));
 
                 m_screen[screenPixelIndex(x, y)] = color;
             }//for y
