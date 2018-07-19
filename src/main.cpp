@@ -6,6 +6,7 @@
 #include "FpsCounter.hpp"
 #include "RunInfo.hpp"
 #include "CudaRaycaster.hpp"
+#include "single_imgui.hpp"
 
 
 int main(int argc, char ** argv)
@@ -14,6 +15,8 @@ int main(int argc, char ** argv)
     RunInfo runinfo;
 
     sf::RenderWindow app(sf::VideoMode(800u, 600u), "FoxRaycaster");
+    sf::Clock guiclock;
+    ImGui::SFML::Init(app);
 
     BackendManager manager;
     manager.addBackend<fox::FoxRaycaster>();
@@ -32,6 +35,7 @@ int main(int argc, char ** argv)
         sf::Event eve;
         while(app.pollEvent(eve))
         {
+            ImGui::SFML::ProcessEvent(eve);
             switch(eve.type)
             {
             case sf::Event::Closed:
@@ -70,6 +74,12 @@ int main(int argc, char ** argv)
             }
         }//while app poll event eve
 
+        ImGui::SFML::Update(app, guiclock.restart());
+
+        ImGui::Begin("Fox2");
+        ImGui::Button("Wat");
+        ImGui::End();
+
         app.clear(sf::Color(0x2d0022ff));
         if(!runinfo.rasteronly)
             currentraycaster->handleKeys();
@@ -102,8 +112,10 @@ int main(int argc, char ** argv)
         txt.setFillColor(sf::Color::White);
         txt.setOutlineColor(sf::Color::Black);
         app.draw(txt);
+        ImGui::SFML::Render(app);
         app.display();
         runinfo.fps = fps.frame();
     }
+    ImGui::SFML::Shutdown();
     return 0;
 }
