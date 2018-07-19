@@ -494,6 +494,11 @@ void CudaRaycaster::setThreadsPerBlock(int threads)
     m_name = "cuda(" + std::to_string(threads) + " tpb)";
 }
 
+int CudaRaycaster::getThreadsPerBlock() const
+{
+    return m_threadsperblock;
+}
+
 unsigned CudaRaycaster::getMapTile(unsigned x, unsigned y) const
 {
     if(x < m_mapwidth && y < m_mapheight)

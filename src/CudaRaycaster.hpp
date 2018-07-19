@@ -19,6 +19,7 @@ public:
     virtual CameraExchangeInfo getCameraInfo() const;
     virtual void setCameraInfo(const CameraExchangeInfo& info);
     void setThreadsPerBlock(int threads);
+    int getThreadsPerBlock() const;
 
 private:
     void setMapSize(unsigned width, unsigned height);

@@ -96,5 +96,12 @@ void AppFox2::gui()
     ImGui::Checkbox("Smooth", &m_runsettings.smooth);
     ImGui::Checkbox("60FPS Lock", &m_runsettings.fpslock);
     ImGui::Checkbox("Raster only", &m_runsettings.rasteronly);
+
+    if(m_cudaraycaster == m_manager.getCurrentInterface())
+    {
+        int tpb = m_cudaraycaster->getThreadsPerBlock();
+        if(ImGui::InputInt("TPB", &tpb))
+            m_cudaraycaster->setThreadsPerBlock(tpb);
+    }//if
     ImGui::End();
 }
