@@ -1,4 +1,5 @@
 #pragma once
+#include <sstream>
 
 const unsigned kResolutionsCount = 5u;
 
