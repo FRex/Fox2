@@ -140,8 +140,8 @@ void FoxRaycaster::rasterize()
             drawstart = 0;
 
         int drawend = lineheight / 2 + m_screenheight / 2;
-        if(drawend >= m_screenheight)
-            drawend = m_screenheight - 1;
+        if((drawend + 1) >= m_screenheight)
+            drawend = m_screenheight - 2;
 
         const unsigned * origfloortex = getTexture(2u);
         const unsigned * origceiltex = getTexture(0u);
@@ -165,7 +165,7 @@ void FoxRaycaster::rasterize()
                 texx = kTextureSize - texx - 1;
 
             const unsigned * tex0 = getTexture(getMapTile(mapx, mapy));
-            for(int y = drawstart; y < drawend; y++)
+            for(int y = drawstart; y <= drawend; y++)
             {
                 const int d = y * 256 - m_screenheight * 128 + lineheight * 128;  //256 and 128 factors to avoid floats
                 const int texy = ((d * kTextureSize) / lineheight) / 256;
@@ -210,7 +210,7 @@ void FoxRaycaster::rasterize()
                 drawend = m_screenheight; //becomes < 0 when the integer overflows
 
             //draw the floor from drawEnd to the bottom of the screen
-            for(int y = drawend + 1; y < m_screenheight; ++y)
+            for(int y = drawend; y < m_screenheight; ++y)
             {
                 const float currentdist = m_screenheight / (2.f * y - m_screenheight); //you could make a small lookup table for this instead
                 const float weight = (currentdist - distplayer) / (distwall - distplayer);
@@ -226,7 +226,8 @@ void FoxRaycaster::rasterize()
 
                 //floor and the summetrical ceiling
                 m_screen[screenPixelIndex(x, y)] = floortex[texturePixelIndex(floortexx, floortexy)];
-                m_screen[screenPixelIndex(x, m_screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
+                if(y > drawend)
+                    m_screen[screenPixelIndex(x, m_screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
             }
 
 
