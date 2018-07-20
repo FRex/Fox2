@@ -35,7 +35,6 @@ public:
     int resolution = 0;
     bool stretch = false;
     bool smooth = false;
-    bool fpslock = false;
     bool rasteronly = false;
 
 };

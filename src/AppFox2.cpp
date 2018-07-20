@@ -49,14 +49,17 @@ void AppFox2::update()
             break;
         }//switch eve type
     }//while
-    m_manager.getCurrentInterface()->handleKeys();
+    if(m_movementclock.getElapsedTime() > sf::seconds(1.f/60.f))
+    {
+        m_manager.getCurrentInterface()->handleKeys();
+        m_movementclock.restart();
+    }
     ImGui::SFML::Update(m_win, m_guiclock.restart());
 
 }
 
 void AppFox2::draw()
 {
-    m_win.setFramerateLimit(60u * m_runsettings.fpslock);
     m_win.clear(sf::Color(0x2d0022ff));
     auto cr = m_manager.getCurrentInterface();
     cr->setScreenSize(m_runsettings.getResolution().x, m_runsettings.getResolution().y);
@@ -94,7 +97,6 @@ void AppFox2::gui()
     ImGui::Text("FPS: %f\n", m_fpscounter.frame());
     ImGui::Checkbox("Stretch", &m_runsettings.stretch);
     ImGui::Checkbox("Smooth", &m_runsettings.smooth);
-    ImGui::Checkbox("60FPS Lock", &m_runsettings.fpslock);
     ImGui::Checkbox("Raster only", &m_runsettings.rasteronly);
 
     if(m_cudaraycaster == m_manager.getCurrentInterface())

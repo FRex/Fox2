@@ -26,4 +26,6 @@ private:
     FpsCounter m_fpscounter;
     RunSettings m_runsettings;
     CudaRaycaster * m_cudaraycaster = 0x0;
+    sf::Clock m_movementclock;
+
 };
