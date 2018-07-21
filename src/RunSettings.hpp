@@ -36,5 +36,6 @@ public:
     bool stretch = false;
     bool smooth = false;
     bool rasteronly = false;
+    bool fpslock = false;
 
 };

@@ -60,6 +60,7 @@ void AppFox2::update()
 
 void AppFox2::draw()
 {
+    m_win.setFramerateLimit(m_runsettings.fpslock * 60u);
     m_win.clear(sf::Color(0x2d0022ff));
     auto cr = m_manager.getCurrentInterface();
     cr->setScreenSize(m_runsettings.getResolution().x, m_runsettings.getResolution().y);
@@ -98,6 +99,7 @@ void AppFox2::gui()
     ImGui::Checkbox("Stretch", &m_runsettings.stretch);
     ImGui::Checkbox("Smooth", &m_runsettings.smooth);
     ImGui::Checkbox("Raster only", &m_runsettings.rasteronly);
+    ImGui::Checkbox("60 FPS Lock", &m_runsettings.fpslock);
 
     if(m_cudaraycaster == m_manager.getCurrentInterface())
     {
