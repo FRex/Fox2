@@ -37,12 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 const unsigned kTextureSize = 64u;
 const unsigned kTexturePixels = kTextureSize * kTextureSize;
 
-inline unsigned texturePixelIndex(unsigned x, unsigned y)
-{
-    return x + kTextureSize * y;
-}
-
-__device__ unsigned cuda_texturePixelIndex(unsigned x, unsigned y)
+__forceinline__ __host__ __device__ unsigned texturePixelIndex(unsigned x, unsigned y)
 {
     return x + kTextureSize * y;
 }
@@ -107,13 +102,6 @@ __device__ const unsigned * cuda_getTexture(const CudaRasterizationParams * para
         return params->textures + num * kTexturePixels;
 
     return params->textures; //jorge
-}
-
-__global__ void clearScreen(unsigned * screen, unsigned width, unsigned height, unsigned color)
-{
-    unsigned * row = screen + blockIdx.x * width;
-    for(int i = 0; i < width; ++i)
-        row[i] = color;
 }
 
 __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
@@ -231,7 +219,7 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
         {
             const int d = y * 256 - params->screenheight * 128 + lineheight * 128;  //256 and 128 factors to avoid floats
             const int texy = ((d * kTextureSize) / lineheight) / 256;
-            unsigned color = tex0[cuda_texturePixelIndex(texx, texy)];
+            unsigned color = tex0[texturePixelIndex(texx, texy)];
             //halve all except first component which is a
             if(side == 1)
                 color = ((color & 0xff000000u) | ((color >> 1) & 0x7f7f7fu));
@@ -293,9 +281,9 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
             }
 
             //floor and symmetrical ceiling
-            params->screen[cuda_screenPixelIndex(params, x, y)] = floortex[cuda_texturePixelIndex(floortexx, floortexy)];
+            params->screen[cuda_screenPixelIndex(params, x, y)] = floortex[texturePixelIndex(floortexx, floortexy)];
             if(y > drawend)
-                params->screen[cuda_screenPixelIndex(params, x, params->screenheight - y)] = ceiltex[cuda_texturePixelIndex(floortexx, floortexy)];
+                params->screen[cuda_screenPixelIndex(params, x, params->screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
         }
     }//if world map > 0
 }
@@ -319,7 +307,6 @@ void CudaRaycaster::rasterize()
     params.texturecount = m_cuda_textures.size() / kTexturePixels;
 
     checkCudaCall(cudaMemcpy(m_cuda_rast_params.ptr(), &params, sizeof(CudaRasterizationParams), cudaMemcpyHostToDevice));
-    //clearScreen << <m_screenheight, 1 >> > (m_cuda_screen.ptr(), m_screenwidth, m_screenheight, 0x7f7f7fff);
     const int tc = m_threadsperblock;
     const int bc = (m_screenwidth + tc - 1) / tc;
     m_timer.start();
