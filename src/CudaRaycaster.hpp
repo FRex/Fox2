@@ -2,6 +2,7 @@
 #include <SFML/Graphics/Image.hpp>
 #include "RaycasterInterface.hpp"
 #include "CudaAutoBuffer.hpp"
+#include "CudaEventTimer.hpp"
 
 class CudaRasterizationParams;
 
@@ -20,6 +21,7 @@ public:
     virtual void setCameraInfo(const CameraExchangeInfo& info);
     void setThreadsPerBlock(int threads);
     int getThreadsPerBlock() const;
+    float getTimerValue();
 
 private:
     void setMapSize(unsigned width, unsigned height);
@@ -46,5 +48,6 @@ private:
     CudaAutoBuffer<CudaRasterizationParams> m_cuda_rast_params;
     int m_threadsperblock = 1;
     std::string m_name;
+    CudaEventTimer m_timer;
 
 };

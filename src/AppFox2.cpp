@@ -49,7 +49,7 @@ void AppFox2::update()
             break;
         }//switch eve type
     }//while
-    if(m_movementclock.getElapsedTime() > sf::seconds(1.f/60.f))
+    if(m_movementclock.getElapsedTime() > sf::seconds(1.f / 60.f))
     {
         m_manager.getCurrentInterface()->handleKeys();
         m_movementclock.restart();
@@ -103,6 +103,8 @@ void AppFox2::gui()
 
     if(m_cudaraycaster == m_manager.getCurrentInterface())
     {
+        ImGui::Separator();
+        ImGui::Text("rasterizeColumn time: %fms", m_cudaraycaster->getTimerValue());
         int tpb = m_cudaraycaster->getThreadsPerBlock();
         if(ImGui::InputInt("TPB", &tpb))
             m_cudaraycaster->setThreadsPerBlock(tpb);
