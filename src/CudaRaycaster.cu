@@ -7,6 +7,8 @@
 #include "device_launch_parameters.h"
 #include "checkCudaCall.hpp"
 #include "jorge.hpp"
+#include "gl_core21.h"
+#include "transferViaPBO.hpp"
 
 /*
 Original raycasting code from tutorials at: http://lodev.org/cgtutor/index.html
@@ -68,6 +70,12 @@ CudaRaycaster::CudaRaycaster()
     setTexture(0u, makeJorgeImage(kTextureSize));
     m_cuda_rast_params.resize(1u);
     setThreadsPerBlock(1);
+    glGenBuffers(1, &m_pbo);
+}
+
+CudaRaycaster::~CudaRaycaster()
+{
+    glDeleteBuffers(1, &m_pbo);
 }
 
 const char * CudaRaycaster::getRaycasterTechName() const
@@ -435,6 +443,7 @@ void CudaRaycaster::downloadImage(sf::Texture& texture)
         texture.create(m_screenwidth, m_screenheight);
 
     texture.update(reinterpret_cast<sf::Uint8*>(m_screen.data()));
+    transferViaPBO(texture, m_pbo);
 }
 
 void CudaRaycaster::loadMap(const sf::Image& img)

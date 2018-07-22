@@ -4,6 +4,7 @@
 #include "FoxRaycaster.hpp"
 #include "CudaRaycaster.hpp"
 #include "single_imgui.hpp"
+#include "gl_core21.h"
 
 void AppFox2::run()
 {
@@ -21,6 +22,12 @@ void AppFox2::init()
 {
     m_win.create(sf::VideoMode(640u, 480u), "Fox2");
     ImGui::SFML::Init(m_win);
+    if(ogl_LoadFunctions() == ogl_LOAD_FAILED)
+    {
+        m_win.close();
+        return;
+    }
+
     m_manager.addBackend<fox::FoxRaycaster>();
     m_cudaraycaster = m_manager.addBackend<CudaRaycaster>();
     m_manager.loadResources();

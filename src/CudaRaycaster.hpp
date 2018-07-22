@@ -10,6 +10,7 @@ class CudaRaycaster : public RaycasterInterface
 {
 public:
     CudaRaycaster();
+    ~CudaRaycaster();
     virtual const char * getRaycasterTechName() const override;
     virtual void rasterize() override;
     virtual void handleKeys() override;
@@ -49,5 +50,6 @@ private:
     int m_threadsperblock = 1;
     std::string m_name;
     CudaEventTimer m_timer;
+    unsigned m_pbo = 0u;
 
 };
