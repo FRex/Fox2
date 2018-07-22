@@ -407,6 +407,9 @@ void CudaRaycaster::setScreenSize(unsigned width, unsigned height)
 
     m_cuda_screen.resize(m_screenpixels);
     checkCudaCall(cudaMemset(m_cuda_screen.ptr(), 0xff, m_cuda_screen.bytesize()));
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_pbo);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, 4 * m_screenpixels, 0x0, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0u);
 }
 
 void CudaRaycaster::setMapSize(unsigned width, unsigned height)
@@ -443,7 +446,7 @@ void CudaRaycaster::downloadImage(sf::Texture& texture)
         texture.create(m_screenwidth, m_screenheight);
 
     texture.update(reinterpret_cast<sf::Uint8*>(m_screen.data()));
-    transferViaPBO(texture, m_pbo);
+    transferViaPBO(m_cuda_screen.ptr(), texture, m_pbo);
 }
 
 void CudaRaycaster::loadMap(const sf::Image& img)

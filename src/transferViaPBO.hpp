@@ -4,4 +4,4 @@ namespace sf {
     class Texture;
 }
 
-void transferViaPBO(sf::Texture& texture, unsigned pbo);
+void transferViaPBO(unsigned * cudascreen, sf::Texture& texture, unsigned pbo);
