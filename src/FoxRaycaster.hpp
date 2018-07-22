@@ -18,6 +18,7 @@ public:
     virtual CameraExchangeInfo getCameraInfo() const;
     virtual void setCameraInfo(const CameraExchangeInfo& info);
     void setName(const std::string& name);
+    virtual float getRasterTime() override;
 
 private:
     void setMapSize(unsigned width, unsigned height);
@@ -43,6 +44,7 @@ private:
     unsigned m_mapwidth;
     unsigned m_mapheight;
     std::string m_name;
+    float m_rastertime = 0.f;
 
 };
 

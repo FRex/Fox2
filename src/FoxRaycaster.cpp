@@ -55,6 +55,7 @@ const char * FoxRaycaster::getRaycasterTechName() const
 
 void FoxRaycaster::rasterize()
 {
+    sf::Clock c;
     for(int x = 0; x < m_screenwidth; ++x)
     {
         //calculate ray position and direction
@@ -233,6 +234,8 @@ void FoxRaycaster::rasterize()
 
         }//if world map > 0
     }//for x
+
+    m_rastertime = c.getElapsedTime().asMicroseconds() / 1000.f;
 }
 
 void FoxRaycaster::handleKeys()
@@ -384,6 +387,11 @@ void FoxRaycaster::setCameraInfo(const CameraExchangeInfo& info)
 void FoxRaycaster::setName(const std::string& name)
 {
     m_name = name;
+}
+
+float FoxRaycaster::getRasterTime()
+{
+    return m_rastertime;
 }
 
 unsigned * FoxRaycaster::getTexture(unsigned texnum)

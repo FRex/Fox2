@@ -30,8 +30,6 @@ public:
     virtual void handleKeys() = 0;
     virtual CameraExchangeInfo getCameraInfo() const = 0;
     virtual void setCameraInfo(const CameraExchangeInfo& info) = 0;
-
-private:
-
+    virtual float getRasterTime() = 0;
 
 };

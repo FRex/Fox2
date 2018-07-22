@@ -488,7 +488,7 @@ int CudaRaycaster::getThreadsPerBlock() const
     return m_threadsperblock;
 }
 
-float CudaRaycaster::getTimerValue()
+float CudaRaycaster::getRasterTime()
 {
     return m_timer.sync();
 }

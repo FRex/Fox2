@@ -100,11 +100,10 @@ void AppFox2::gui()
     ImGui::Checkbox("Smooth", &m_runsettings.smooth);
     ImGui::Checkbox("Raster only", &m_runsettings.rasteronly);
     ImGui::Checkbox("60 FPS Lock", &m_runsettings.fpslock);
-
+    ImGui::Separator();
+    ImGui::Text("raster time: %fms", m_manager.getCurrentInterface()->getRasterTime());
     if(m_cudaraycaster == m_manager.getCurrentInterface())
     {
-        ImGui::Separator();
-        ImGui::Text("rasterizeColumn time: %fms", m_cudaraycaster->getTimerValue());
         int tpb = m_cudaraycaster->getThreadsPerBlock();
         if(ImGui::InputInt("TPB", &tpb))
             m_cudaraycaster->setThreadsPerBlock(tpb);

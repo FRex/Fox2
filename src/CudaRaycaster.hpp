@@ -21,7 +21,7 @@ public:
     virtual void setCameraInfo(const CameraExchangeInfo& info);
     void setThreadsPerBlock(int threads);
     int getThreadsPerBlock() const;
-    float getTimerValue();
+    virtual float getRasterTime() override;
 
 private:
     void setMapSize(unsigned width, unsigned height);
