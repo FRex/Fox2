@@ -321,6 +321,8 @@ void CudaRaycaster::rasterize()
     cuda_rasterizeColumn << <bc, tc >> > (m_cuda_rast_params.ptr());
     m_timer.stop();
     checkCudaCall(cudaGetLastError());
+    if(!m_usepbo)
+        checkCudaCall(cudaMemcpy(m_screen.data(), m_cuda_screen.ptr(), m_screenpixels * 4u, cudaMemcpyDeviceToHost));
 }
 
 void CudaRaycaster::handleKeys()
@@ -402,6 +404,7 @@ void CudaRaycaster::setScreenSize(unsigned width, unsigned height)
     m_screenwidth = width;
     m_screenheight = height;
     m_screenpixels = width * height;
+    m_screen.assign(m_screenpixels, 0x7f7f7fff);
 
     m_cuda_screen.resize(m_screenpixels);
     checkCudaCall(cudaMemset(m_cuda_screen.ptr(), 0xff, m_cuda_screen.bytesize()));
@@ -443,7 +446,10 @@ void CudaRaycaster::downloadImage(sf::Texture& texture)
     if(texture.getSize() != sf::Vector2u(m_screenwidth, m_screenheight))
         texture.create(m_screenwidth, m_screenheight);
 
-    transferViaPBO(m_cuda_screen.ptr(), texture, m_pbo);
+    if(m_usepbo)
+        transferViaPBO(m_cuda_screen.ptr(), texture, m_pbo);
+    else
+        texture.update(reinterpret_cast<sf::Uint8*>(m_screen.data()));
 }
 
 void CudaRaycaster::loadMap(const sf::Image& img)
@@ -500,6 +506,16 @@ int CudaRaycaster::getThreadsPerBlock() const
 float CudaRaycaster::getRasterTime()
 {
     return m_timer.sync();
+}
+
+bool CudaRaycaster::getUsePbo() const
+{
+    return m_usepbo;
+}
+
+void CudaRaycaster::setUsePbo(bool usepbo)
+{
+    m_usepbo = usepbo;
 }
 
 unsigned CudaRaycaster::getMapTile(unsigned x, unsigned y) const

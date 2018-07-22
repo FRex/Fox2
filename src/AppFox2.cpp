@@ -113,6 +113,10 @@ void AppFox2::gui()
     if(m_cudaraycaster == m_manager.getCurrentInterface())
     {
         int tpb = m_cudaraycaster->getThreadsPerBlock();
+        bool usepbo = m_cudaraycaster->getUsePbo();
+        if(ImGui::Checkbox("Use PBO", &usepbo))
+            m_cudaraycaster->setUsePbo(usepbo);
+
         if(ImGui::InputInt("TPB", &tpb))
             m_cudaraycaster->setThreadsPerBlock(tpb);
     }//if

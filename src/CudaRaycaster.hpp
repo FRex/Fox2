@@ -23,6 +23,8 @@ public:
     void setThreadsPerBlock(int threads);
     int getThreadsPerBlock() const;
     virtual float getRasterTime() override;
+    bool getUsePbo() const;
+    void setUsePbo(bool usepbo);
 
 private:
     void setMapSize(unsigned width, unsigned height);
@@ -36,6 +38,7 @@ private:
     float m_planex = 0.f;
     float m_planey = 0.66f;
 
+    std::vector<unsigned> m_screen;
     unsigned m_screenwidth;
     unsigned m_screenheight;
     unsigned m_screenpixels;
@@ -50,5 +53,6 @@ private:
     std::string m_name;
     CudaEventTimer m_timer;
     unsigned m_pbo = 0u;
+    bool m_usepbo = false;
 
 };
