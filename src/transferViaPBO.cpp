@@ -7,6 +7,9 @@
 
 void transferViaPBO(unsigned * cudascreen, sf::Texture& texture, unsigned pbo)
 {
+    if(wglGetCurrentContext() == NULL)
+        return;
+
     const int x = static_cast<int>(texture.getSize().x);
     const int y = static_cast<int>(texture.getSize().y);
     const unsigned size = texture.getSize().x * texture.getSize().y * 4;
