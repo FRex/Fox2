@@ -6,8 +6,7 @@
 
 CudaEventTimer::CudaEventTimer()
 {
-    //m_events = std::malloc(sizeof(cudaEvent_t*) * 2);
-    m_events = std::malloc(256);
+    m_events = std::malloc(sizeof(cudaEvent_t) * 2);
     checkCudaCall(cudaEventCreate(&startevent));
     checkCudaCall(cudaEventCreate(&stopevent));
 }

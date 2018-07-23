@@ -28,5 +28,7 @@ private:
     CudaRaycaster * m_cudaraycaster = 0x0;
     sf::Clock m_movementclock;
     std::string m_glvendor;
+    std::string m_glrenderer;
+    int m_framecounter = 0;
 
 };

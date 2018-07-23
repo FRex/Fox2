@@ -28,6 +28,7 @@ void AppFox2::init()
         return;
     }
     m_glvendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+    m_glrenderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
     m_manager.addBackend<fox::FoxRaycaster>();
     m_cudaraycaster = m_manager.addBackend<CudaRaycaster>();
     m_manager.loadResources();
@@ -90,6 +91,7 @@ void AppFox2::draw()
     }//if not rasteronly
     ImGui::SFML::Render(m_win);
     m_win.display();
+    ++m_framecounter;
 }
 
 void AppFox2::gui()
@@ -100,7 +102,9 @@ void AppFox2::gui()
     if(ImGui::Button(m_manager.getCurrentInterface()->getRaycasterTechName()))
         m_manager.switchInterface();
 
-    ImGui::Text("GL_VENDOR = %s", m_glvendor.c_str());
+    ImGui::Text("Frame %019d", m_framecounter);
+    ImGui::Text("GL_VENDOR   = %s", m_glvendor.c_str());
+    ImGui::Text("GL_RENDERER = %s", m_glrenderer.c_str());
     char buff[128];
     ImGui::Combo("Resolution", &m_runsettings.resolution, getResolutionText, buff, kResolutionsCount, kResolutionsCount + 1);
     ImGui::Text("FPS: %f\n", m_fpscounter.frame());
