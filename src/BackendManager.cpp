@@ -19,6 +19,9 @@ void BackendManager::loadResources()
         if(img.loadFromFile("tex2.png"))
             backend->setTexture(2u, img);
 
+        if(img.loadFromFile("tex3.png"))
+            backend->setTexture(3u, img);
+
         if(img.loadFromFile("map.png"))
             backend->loadMap(img);
     }

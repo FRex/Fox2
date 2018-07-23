@@ -356,12 +356,20 @@ void FoxRaycaster::downloadImage(sf::Texture& texture)
     texture.update(reinterpret_cast<sf::Uint8*>(m_screen.data()));
 }
 
+static unsigned pixelTile(sf::Color c)
+{
+    if(c.r > 128u) return 1u;
+    if(c.g > 128u) return 2u;
+    if(c.b > 128u) return 3u;
+    return 0u;
+}
+
 void FoxRaycaster::loadMap(const sf::Image& img)
 {
     setMapSize(img.getSize().x, img.getSize().y);
     for(unsigned x = 0u; x < img.getSize().x; ++x)
         for(unsigned y = 0u; y < img.getSize().y; ++y)
-            setMapTile(x, y, img.getPixel(x, y) != sf::Color::Black);
+            setMapTile(x, y, pixelTile(img.getPixel(x, y)));
 }
 
 CameraExchangeInfo FoxRaycaster::getCameraInfo() const

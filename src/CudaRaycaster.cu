@@ -457,6 +457,14 @@ void CudaRaycaster::downloadImage(sf::Texture& texture)
     }
 }
 
+static unsigned pixelTile(sf::Color c)
+{
+    if(c.r > 128u) return 1u;
+    if(c.g > 128u) return 2u;
+    if(c.b > 128u) return 3u;
+    return 0u;
+}
+
 void CudaRaycaster::loadMap(const sf::Image& img)
 {
     std::vector<unsigned> tiles;
@@ -465,7 +473,7 @@ void CudaRaycaster::loadMap(const sf::Image& img)
     m_mapheight = ims.y;
     for(unsigned y = 0u; y < ims.y; ++y)
         for(unsigned x = 0u; x < ims.x; ++x)
-            tiles.push_back(img.getPixel(x, y) != sf::Color::Black);
+            tiles.push_back(pixelTile(img.getPixel(x, y)));
 
     m_map = tiles;
     m_cuda_map.resize(tiles.size());
