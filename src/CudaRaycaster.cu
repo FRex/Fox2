@@ -270,7 +270,7 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
         //draw the floor from drawEnd to the bottom of the screen
         const unsigned * origfloortex = cuda_getTexture(params, 2u);
         const unsigned * origceiltex = cuda_getTexture(params, 0u);
-        for(int y = drawend + 1; y < params->screenheight; ++y)
+        for(int y = drawend + 1; y <= params->screenheight; ++y)
         {
             const float currentdist = params->screenheight / (2.f * y - params->screenheight); //you could make a small lookup table for this instead
             const float weight = (currentdist - distplayer) / (distwall - distplayer);
@@ -289,8 +289,11 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
             }
 
             //floor and the summetrical ceiling, with edge cases
-            params->screen[cuda_screenPixelIndex(params, x, y)] = floortex[texturePixelIndex(floortexx, floortexy)];
-            params->screen[cuda_screenPixelIndex(params, x, params->screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
+            if(y < params->screenheight)
+                params->screen[cuda_screenPixelIndex(params, x, y)] = floortex[texturePixelIndex(floortexx, floortexy)];
+
+            if((y < params->screenheight) || (y >(drawend + 1)))
+                params->screen[cuda_screenPixelIndex(params, x, params->screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
         }
     }//if world map > 0
 }
