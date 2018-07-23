@@ -65,12 +65,12 @@ public:
 
 CudaRaycaster::CudaRaycaster()
 {
-    setScreenSize(800u, 600u);
     setMapSize(10u, 10u);
     setTexture(0u, makeJorgeImage(kTextureSize));
     m_cuda_rast_params.resize(1u);
     setThreadsPerBlock(1);
     glGenBuffers(1, &m_pbo);
+    setScreenSize(800u, 600u);
 }
 
 CudaRaycaster::~CudaRaycaster()

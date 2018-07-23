@@ -13,4 +13,14 @@ Used in project:
 To build an exe it needs to link to:
 * SFML (System, Window and Graphics)
 * Cuda RT (cudart.lib)
-* OpenGL (opengl32.lib
+* OpenGL (opengl32.lib)
+
+
+Prebuilt Win64 binary (requires MS Runetime libs to be installed): [link](https://ln.sync.com/dl/ed28bda70/qfjxsbw9-yghp2bgw-akf26ki6-agbhfp4c)
+
+
+Screenshots:
+![sshot/sshot000003450.png](sshot/sshot000003450.png)
+![sshot/sshot000004735.png](sshot/sshot000004735.png)
+![sshot/sshot000008211.png](sshot/sshot000008211.png)
+![sshot/sshot000012580.png](sshot/sshot000012580.png)

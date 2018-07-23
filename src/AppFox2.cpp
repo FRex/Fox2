@@ -55,11 +55,26 @@ void AppFox2::update()
         case sf::Event::Resized:
             m_win.setView(sf::View(sf::FloatRect(0.f, 0.f, eve.size.width, eve.size.height)));
             break;
+        case sf::Event::KeyPressed:
+            if(eve.key.code == sf::Keyboard::Semicolon)
+            {
+                sf::Texture tex;
+                tex.create(m_win.getSize().x, m_win.getSize().y);
+                tex.update(m_win);
+                char buff[128];
+                std::snprintf(buff, 120, "sshot%09d.png", m_framecounter);
+                const auto img = tex.copyToImage();
+                img.saveToFile(buff);
+                std::printf("Screenshot taken: %s\n", buff);
+            }
+            break;
         }//switch eve type
     }//while
     if(m_movementclock.getElapsedTime() > sf::seconds(1.f / 60.f))
     {
-        m_manager.getCurrentInterface()->handleKeys();
+        if(m_win.hasFocus())
+            m_manager.getCurrentInterface()->handleKeys();
+
         m_movementclock.restart();
     }
     ImGui::SFML::Update(m_win, m_guiclock.restart());
