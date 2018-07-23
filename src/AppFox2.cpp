@@ -100,7 +100,7 @@ void AppFox2::gui()
     if(ImGui::Button(m_manager.getCurrentInterface()->getRaycasterTechName()))
         m_manager.switchInterface();
 
-    ImGui::Text("GL_VENDER = %s", m_glvendor.c_str());
+    ImGui::Text("GL_VENDOR = %s", m_glvendor.c_str());
     char buff[128];
     ImGui::Combo("Resolution", &m_runsettings.resolution, getResolutionText, buff, kResolutionsCount, kResolutionsCount + 1);
     ImGui::Text("FPS: %f\n", m_fpscounter.frame());
