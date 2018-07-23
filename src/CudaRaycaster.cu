@@ -288,9 +288,12 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
                 ceiltex = tmp;
             }
 
-            //floor and symmetrical ceiling
-            params->screen[cuda_screenPixelIndex(params, x, y)] = floortex[texturePixelIndex(floortexx, floortexy)];
-            params->screen[cuda_screenPixelIndex(params, x, params->screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
+            //floor and the summetrical ceiling, with edge cases
+            if(y < params->screenheight)
+                params->screen[cuda_screenPixelIndex(params, x, y)] = floortex[texturePixelIndex(floortexx, floortexy)];
+
+            if(y > drawend + 1)
+                params->screen[cuda_screenPixelIndex(params, x, params->screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
         }
     }//if world map > 0
 }
