@@ -306,7 +306,7 @@ void FoxRaycaster::setTexture(unsigned texnum, const sf::Image& img)
         for(int y = 0; y < kTextureSize; ++y)
             t[texturePixelIndex(x, y)] = byteswap(img.getPixel(x, y).toInteger());
 }
-#define byteswap
+#undef byteswap
 
 void FoxRaycaster::setScreenSize(unsigned width, unsigned height)
 {
