@@ -201,8 +201,8 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
         drawstart = 0;
 
     int drawend = lineheight / 2 + params->screenheight / 2;
-    if((drawend + 1) >= params->screenheight)
-        drawend = params->screenheight - 2;
+    if(drawend >= params->screenheight)
+        drawend = params->screenheight - 1;
 
     //choose wall color
     if(cuda_getMapTile(params, mapx, mapy) > 0)
@@ -270,7 +270,7 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
         //draw the floor from drawEnd to the bottom of the screen
         const unsigned * origfloortex = cuda_getTexture(params, 2u);
         const unsigned * origceiltex = cuda_getTexture(params, 0u);
-        for(int y = drawend; y < params->screenheight; ++y)
+        for(int y = drawend + 1; y < params->screenheight; ++y)
         {
             const float currentdist = params->screenheight / (2.f * y - params->screenheight); //you could make a small lookup table for this instead
             const float weight = (currentdist - distplayer) / (distwall - distplayer);
@@ -290,8 +290,7 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
 
             //floor and symmetrical ceiling
             params->screen[cuda_screenPixelIndex(params, x, y)] = floortex[texturePixelIndex(floortexx, floortexy)];
-            if(y > drawend)
-                params->screen[cuda_screenPixelIndex(params, x, params->screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
+            params->screen[cuda_screenPixelIndex(params, x, params->screenheight - y)] = ceiltex[texturePixelIndex(floortexx, floortexy)];
         }
     }//if world map > 0
 }
