@@ -222,7 +222,7 @@ void FoxRaycaster::rasterize()
 
                 const unsigned * floortex = origfloortex;
                 const unsigned * ceiltex = origceiltex;
-                if((static_cast<int>(currentfloorx) + static_cast<int>(currentfloory)) % 2)
+                if((static_cast<int>(floor(currentfloorx)) + static_cast<int>(floor(currentfloory))) % 2)
                     std::swap(floortex, ceiltex);
 
                 //floor and the summetrical ceiling, with edge cases

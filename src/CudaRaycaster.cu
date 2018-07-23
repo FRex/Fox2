@@ -281,7 +281,7 @@ __global__ void cuda_rasterizeColumn(const CudaRasterizationParams * params)
 
             const unsigned * floortex = origfloortex;
             const unsigned * ceiltex = origceiltex;
-            if((static_cast<int>(currentfloorx) + static_cast<int>(currentfloory)) % 2)
+            if((static_cast<int>(floor(currentfloorx)) + static_cast<int>(floor(currentfloory))) % 2)
             {
                 const unsigned * tmp = floortex;
                 floortex = ceiltex;
